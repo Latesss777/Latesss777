@@ -208,8 +208,8 @@ h1{font-size:36px;margin:6px 0 0}
   border-radius:24px;
   --accent-rgb:160,164,174;
   --accent:#a0a4ae;
-  background:#060708;
-  border:1px solid rgba(var(--accent-rgb),.44);
+  background:transparent;
+  border:1px solid rgba(var(--accent-rgb),.40);
   box-shadow:
     inset 0 1px 0 rgba(255,255,255,.08),
     inset 0 0 0 1px rgba(var(--accent-rgb),.06),
@@ -230,7 +230,7 @@ h1{font-size:36px;margin:6px 0 0}
   background-size:cover;
   background-position:center;
   transform:scale(1.01);
-  filter:grayscale(.22) contrast(1.12) brightness(.76) saturate(.86);
+  filter:grayscale(0) contrast(1.08) brightness(.78) saturate(1.16);
 }
 .card-photo:after{
   content:"";
@@ -238,16 +238,11 @@ h1{font-size:36px;margin:6px 0 0}
   inset:0;
   background:
     linear-gradient(90deg,
-      rgba(5,6,8,.995) 0%,
-      rgba(5,6,8,.975) 28%,
-      rgba(5,6,8,.86) 44%,
-      rgba(5,6,8,.48) 62%,
-      rgba(5,6,8,.16) 100%),
-    linear-gradient(135deg,
-      rgba(var(--accent-rgb),.25) 0%,
-      rgba(var(--accent-rgb),.10) 42%,
-      rgba(var(--accent-rgb),.04) 72%,
-      transparent 100%);
+      rgba(3,4,6,.90) 0%,
+      rgba(3,4,6,.76) 30%,
+      rgba(3,4,6,.50) 48%,
+      rgba(3,4,6,.20) 68%,
+      rgba(3,4,6,.04) 100%);
 }
 .card.exact-art:before{
   content:"";
@@ -380,6 +375,43 @@ h1{font-size:36px;margin:6px 0 0}
 .card-live-action.menu svg{width:46%;height:46%}
 .card.exact-art:active{transform:scale(.995)}
 .card-hit{display:none!important}
+
+.card-row{
+  position:relative;
+  overflow:hidden;
+  border-radius:24px;
+  margin-bottom:14px;
+  touch-action:pan-y;
+}
+.card-row .card.exact-art{
+  margin-bottom:0;
+  position:relative;
+  z-index:2;
+  will-change:transform,opacity;
+  transition:transform .18s cubic-bezier(.2,.7,.2,1),opacity .18s ease;
+}
+.card-row.is-dragging .card.exact-art{transition:none}
+.card-delete-underlay{
+  position:absolute;
+  inset:0;
+  z-index:1;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  padding-right:24px;
+  border-radius:24px;
+  background:linear-gradient(90deg,rgba(126,18,25,.18),#9e1d26 72%,#bd2530 100%);
+  color:#fff;
+  font-family:'Russo One',system-ui,sans-serif;
+  font-size:13px;
+  letter-spacing:.04em;
+}
+.card-delete-underlay svg{width:23px;height:23px;stroke:currentColor}
+.card-row.deleting .card.exact-art{
+  transform:translateX(-112%)!important;
+  opacity:.25;
+}
 @media (max-width:360px){
   .card-live-title{font-size:17px}
   .card-live-stat span{font-size:7.4px}
@@ -1103,29 +1135,35 @@ h1{font-size:36px;margin:6px 0 0}
       const kind=workoutKind(w);
       const photo=CARD_PHOTOS[kind]||CARD_PHOTOS.training;
       return `
-        <article class="card exact-art" data-theme="${w.color||'graphite'}" data-id="${w.id}">
-          <div class="card-photo" style="--photo:url('${photo}')"></div>
-          <div class="card-live">
-            <button class="card-primary play-btn" data-id="${w.id}" aria-label="Запустить ${esc(w.name)}">
-              <span class="card-sport-icon">${workoutIconSvg(kind)}</span>
-              <strong class="card-live-title">${esc(w.name)}</strong>
-              <span class="card-live-stats" aria-hidden="true">
-                <span class="card-live-stat"><b>${w.work}</b><span>Работа</span></span>
-                <span class="card-live-stat"><b>${w.rest}</b><span>Отдых</span></span>
-                <span class="card-live-stat"><b>${w.cycles}</b><span>Циклы</span></span>
-                <span class="card-live-stat"><b>${w.sets}</b><span>Подходы</span></span>
-              </span>
-            </button>
-            <div class="card-live-actions">
-              <button class="card-live-action menu menu-btn" data-id="${w.id}" aria-label="Действия">
-                <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
-              </button>
-              <button class="card-live-action play-btn" data-id="${w.id}" aria-label="Запустить">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"><path d="M8 5.5v13l10-6.5-10-6.5Z"/></svg>
-              </button>
-            </div>
+        <div class="card-row" data-id="${w.id}">
+          <div class="card-delete-underlay" aria-hidden="true">
+            <span>Удалить</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg>
           </div>
-        </article>
+          <article class="card exact-art" data-theme="${w.color||'graphite'}" data-id="${w.id}">
+            <div class="card-photo" style="--photo:url('${photo}')"></div>
+            <div class="card-live">
+              <button class="card-primary play-btn" data-id="${w.id}" aria-label="Запустить ${esc(w.name)}">
+                <span class="card-sport-icon">${workoutIconSvg(kind)}</span>
+                <strong class="card-live-title">${esc(w.name)}</strong>
+                <span class="card-live-stats" aria-hidden="true">
+                  <span class="card-live-stat"><b>${w.work}</b><span>Работа</span></span>
+                  <span class="card-live-stat"><b>${w.rest}</b><span>Отдых</span></span>
+                  <span class="card-live-stat"><b>${w.cycles}</b><span>Циклы</span></span>
+                  <span class="card-live-stat"><b>${w.sets}</b><span>Подходы</span></span>
+                </span>
+              </button>
+              <div class="card-live-actions">
+                <button class="card-live-action menu menu-btn" data-id="${w.id}" aria-label="Действия">
+                  <svg viewBox="0 0 24 24" fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/></svg>
+                </button>
+                <button class="card-live-action play-btn" data-id="${w.id}" aria-label="Запустить">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linejoin="round"><path d="M8 5.5v13l10-6.5-10-6.5Z"/></svg>
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
       `;
     }).join('');
   }
@@ -1500,7 +1538,99 @@ h1{font-size:36px;margin:6px 0 0}
       : '<svg class="icon timer-icon" viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5-10-6.5Z"/></svg>';
   }
 
+  let swipeState=null;
+  let suppressCardClickUntil=0;
+
+  function deleteWorkoutBySwipe(id,row){
+    if(!id)return;
+    row?.classList.add('deleting');
+    haptic(18);
+    setTimeout(()=>{
+      workouts=workouts.filter(w=>w.id!==id);
+      saveWorkouts();
+      renderCards();
+      showToast('Тренировка удалена');
+    },170);
+  }
+
+  $('cards').addEventListener('pointerdown',e=>{
+    if(e.pointerType==='mouse' && e.button!==0)return;
+    if(e.target.closest('.card-live-action'))return;
+    const row=e.target.closest('.card-row');
+    const card=row?.querySelector('.card.exact-art');
+    if(!row||!card)return;
+    swipeState={
+      pointerId:e.pointerId,
+      row,card,
+      id:row.dataset.id,
+      startX:e.clientX,
+      startY:e.clientY,
+      dx:0,
+      horizontal:false,
+      cancelled:false
+    };
+    try{row.setPointerCapture(e.pointerId)}catch{}
+  });
+
+  $('cards').addEventListener('pointermove',e=>{
+    const st=swipeState;
+    if(!st||st.pointerId!==e.pointerId||st.cancelled)return;
+    const rawX=e.clientX-st.startX;
+    const rawY=e.clientY-st.startY;
+
+    if(!st.horizontal){
+      if(Math.abs(rawY)>10 && Math.abs(rawY)>Math.abs(rawX)){
+        st.cancelled=true;
+        st.row.classList.remove('is-dragging');
+        st.card.style.transform='';
+        return;
+      }
+      if(Math.abs(rawX)>8 && Math.abs(rawX)>Math.abs(rawY)*1.15){
+        st.horizontal=true;
+        st.row.classList.add('is-dragging');
+      }else return;
+    }
+
+    e.preventDefault();
+    const width=st.row.getBoundingClientRect().width||1;
+    const dx=Math.max(-width,Math.min(0,rawX));
+    st.dx=dx;
+    const resistance=dx<-width*.58 ? -width*.58+(dx+width*.58)*.38 : dx;
+    st.card.style.transform=`translateX(${resistance}px)`;
+  },{passive:false});
+
+  function finishCardSwipe(e){
+    const st=swipeState;
+    if(!st||st.pointerId!==e.pointerId)return;
+    swipeState=null;
+    st.row.classList.remove('is-dragging');
+    try{st.row.releasePointerCapture(e.pointerId)}catch{}
+
+    if(st.cancelled){
+      st.card.style.transform='';
+      return;
+    }
+
+    const width=st.row.getBoundingClientRect().width||1;
+    const shouldDelete=st.horizontal && st.dx<-Math.max(88,width*.28);
+    if(shouldDelete){
+      suppressCardClickUntil=Date.now()+450;
+      deleteWorkoutBySwipe(st.id,st.row);
+    }else{
+      st.card.style.transform='';
+      if(st.horizontal)suppressCardClickUntil=Date.now()+220;
+    }
+  }
+
+  $('cards').addEventListener('pointerup',finishCardSwipe);
+  $('cards').addEventListener('pointercancel',finishCardSwipe);
+
   $('cards').addEventListener('click',e=>{
+    if(Date.now()<suppressCardClickUntil){
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     const menu=e.target.closest('.menu-btn');
     const play=e.target.closest('.play-btn');
     if(menu){openCardMenu(menu.dataset.id);return}
