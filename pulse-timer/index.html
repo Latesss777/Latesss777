@@ -1,240 +1,695 @@
-<!doctype html><html lang="ru"><head><meta charset="UTF-8" /><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" /><meta http-equiv="Pragma" content="no-cache" /><meta http-equiv="Expires" content="0" /><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" /><meta id="themeColor" name="theme-color" content="#000000" /><meta name="apple-mobile-web-app-capable" content="yes" /><meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" /><title>Pulse Timer</title><!-- build: functional-restore-1220 --><style>@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Russo+One&display=swap');*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}html,body{margin:0;width:100%;height:100%;min-height:100%;background:#050505;overflow:hidden;overscroll-behavior:none;touch-action:pan-x pan-y;color:#fff;font-family:Oswald,system-ui,sans-serif}#app{position:fixed;inset:0;width:100%;height:100%;min-height:100dvh;background:#050505;overflow:hidden}button,input{font:inherit}button{color:inherit}.hidden{display:none!important}.splash{position:fixed;inset:0;z-index:9999;background:#000;display:grid;place-items:center;overflow:hidden;opacity:1;visibility:visible}.logo-wrap{position:relative;z-index:2;text-align:center;animation:logoIn 1.15s cubic-bezier(.18,.8,.2,1) both}.logo{width:168px;filter:drop-shadow(0 0 26px rgba(255,255,255,.26))}.brand{font-family:'Russo One';font-size:18px;letter-spacing:.28em;margin-top:18px}.rings{position:absolute;width:75vmin;height:75vmin;border-radius:50%;border:1px solid rgba(255,255,255,.1);box-shadow:0 0 0 50px rgba(255,255,255,.02),0 0 0 100px rgba(255,255,255,.012);animation:ringPulse 1.5s ease-out infinite}@keyframes logoIn{0%{opacity:0;transform:scale(.9)}55%{opacity:1;transform:scale(1.025)}100%{opacity:1;transform:scale(1)}}@keyframes ringPulse{0%{transform:scale(.75);opacity:.15}70%{opacity:.5}100%{transform:scale(1.12);opacity:0}}.screen,.editor,.timer{position:fixed;inset:0;padding:max(14px,env(safe-area-inset-top)) 16px 0;background:#050505}.screen{background:radial-gradient(circle at 20% 10%,#252525 0,transparent 33%),radial-gradient(circle at 80% 90%,#171717 0,transparent 35%),#050505}.topbar,.editor-head,.timer-head{display:flex;align-items:center;justify-content:space-between;gap:12px}.eyebrow{font-size:10px;letter-spacing:.22em;color:#888}h1,h2,h3,.phase-title{font-family:'Russo One',sans-serif}h1{font-size:38px;margin:6px 0 0}h2{font-size:24px;margin:0}.icon-btn{width:52px;height:52px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(12,12,12,.55);backdrop-filter:blur(10px);display:grid;place-items:center;padding:0;line-height:0}.settings{margin:14px 0;border:1px solid rgba(255,255,255,.12);border-radius:20px;background:#111;padding:10px 14px}.settings label{height:52px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07)}.settings label:last-child{border-bottom:0}.settings .switch-control{position:relative;width:48px;height:28px;flex:0 0 48px}.settings .switch-control input{position:absolute;opacity:0;pointer-events:none}.settings .switch-track{position:absolute;inset:0;border-radius:999px;background:#2a2a2a;border:1px solid rgba(255,255,255,.12);transition:.18s ease;box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}.settings .switch-track:after{content:"";position:absolute;width:22px;height:22px;left:2px;top:2px;border-radius:50%;background:#8b8b8b;transition:.18s ease;box-shadow:0 2px 6px rgba(0,0,0,.35)}.settings .switch-control input:checked + .switch-track{background:#f1f1f1;border-color:#fff}.settings .switch-control input:checked + .switch-track:after{transform:translateX(20px);background:#111}.ui-icon{width:22px;height:22px;display:block;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}.fab .ui-icon{width:28px;height:28px}.small-btn .ui-icon{width:21px;height:21px}.splash.entering{animation:splashDarken .46s cubic-bezier(.2,.74,.2,1) forwards}.splash.entering .logo-wrap{animation:logoDive .46s cubic-bezier(.16,.84,.18,1) forwards}.splash.entering .rings{animation:ringDive .46s cubic-bezier(.16,.84,.18,1) forwards}@keyframes logoDive{0%{transform:scale(1);opacity:1}70%{transform:scale(4.8);opacity:1}100%{transform:scale(10);opacity:0}}@keyframes ringDive{0%{transform:scale(1);opacity:.3}100%{transform:scale(3.4);opacity:0}}@keyframes splashDarken{0%{background:#000;opacity:1}100%{background:#000;opacity:0}}.cards{height:calc(100dvh - 110px - env(safe-area-inset-top));overflow:auto;padding:14px 0 100px;scrollbar-width:none}.cards::-webkit-scrollbar{display:none}.card{border:1px solid rgba(255,255,255,.12);border-radius:24px;background:linear-gradient(155deg,#161616,#070707);padding:18px;margin-bottom:12px}.card-top{display:flex;justify-content:space-between;align-items:center}.card h3{font-size:25px;margin:0}.card-actions{display:flex;gap:8px}.small-btn{width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(20,20,20,.7);display:grid;place-items:center;padding:0;line-height:0}.card-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:18px}.card-stats span{display:block;font-size:11px;color:#888}.card-stats b{font-size:24px;font-weight:500}.card-foot{margin-top:14px;color:#999;font-size:12px;border-top:1px solid rgba(255,255,255,.08);padding-top:11px}.fab{position:absolute;right:18px;bottom:max(18px,env(safe-area-inset-bottom));width:62px;height:62px;border-radius:50%;border:1px solid rgba(255,255,255,.6);background:rgba(255,255,255,.08);backdrop-filter:blur(18px);display:grid;place-items:center;padding:0;line-height:0}.editor{overflow:auto;background:#050505;padding-left:18px;padding-right:18px}.editor-head{margin-bottom:18px;min-height:58px}.editor-head h2{font-size:28px}.text-btn{background:transparent;border:0;font-size:14px;letter-spacing:.1em;padding:12px 4px}.name-input{width:100%;height:70px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:#111;color:#fff;padding:0 16px;font-family:'Russo One';font-size:26px}.editor-list{margin-top:12px;border:1px solid rgba(255,255,255,.1);border-radius:24px;background:#0d0d0d;overflow:hidden}.row{display:flex;align-items:center;justify-content:space-between;min-height:80px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.07)}.row:last-child{border-bottom:0}.row>span{font-size:16px;color:#ddd;line-height:1.15;max-width:46%}.step{display:grid;grid-template-columns:46px 88px 46px;gap:7px;align-items:center}.step button{height:46px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:#111;font-size:25px;line-height:1}.val{background:transparent!important;border:0!important;font-size:26px;min-width:88px}.val small{font-size:11px;color:#8e8e8e;margin-left:2px}.start-btn{width:100%;height:70px;margin-top:16px;border-radius:22px;border:1px solid rgba(255,255,255,.65);background:rgba(255,255,255,.09);backdrop-filter:blur(18px);font-family:'Russo One',Impact,sans-serif;font-size:22px;font-weight:400;letter-spacing:.045em;display:flex;align-items:center;justify-content:center;gap:11px;line-height:1}.start-btn svg{width:22px;height:22px;flex:0 0 auto}.start-label{display:block;transform:translateY(.5px)}.delete-btn{width:100%;border:0;background:transparent;color:#888;padding:18px;font-size:14px}.timer{padding:0 14px 0;background:transparent;bottom:0;height:100dvh;min-height:100dvh;isolation:isolate;overflow:hidden;display:grid;grid-template-rows:auto auto auto minmax(0,1fr) auto}.phase-bg{position:absolute;left:-14px;right:-14px;top:calc(0px - env(safe-area-inset-top));bottom:calc(0px - env(safe-area-inset-bottom));z-index:0;overflow:hidden;background:#111;transition:.35s filter;min-height:calc(100dvh + env(safe-area-inset-top) + env(safe-area-inset-bottom))}.phase-bg:before,.phase-bg:after{content:"";position:absolute;border-radius:46% 54% 60% 40%/55% 42% 58% 45%;filter:blur(34px) saturate(155%);mix-blend-mode:screen;animation:morph 7s ease-in-out infinite alternate}.phase-bg:before{width:110%;height:70%;left:-5%;top:8%;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.9) 0 4%,var(--a) 18%,var(--b) 50%,transparent 72%)}.phase-bg:after{width:90%;height:50%;left:5%;bottom:2%;background:radial-gradient(circle at 50% 50%,var(--c) 0 10%,var(--a) 34%,transparent 70%);animation-duration:5.5s}.phase-bg.prep{--a:#d8ff2a;--b:#51ff6f;--c:#fff7a6;background:#183516}.phase-bg.work{--a:#ff3d22;--b:#7545ff;--c:#ffe772;background:#2c0a10}.phase-bg.rest{--a:#5d79ff;--b:#8b5aff;--c:#c6f6ff;background:#0d1438}.phase-bg.pulse1{animation:bgPulse .55s ease-out}.phase-bg.pulse2{animation:bgPulseStrong .55s ease-out}.phase-bg.pulse3{animation:bgPulseMax .55s ease-out}@keyframes morph{0%{transform:translate(-4%,-2%) scale(.9) rotate(-6deg)}50%{transform:translate(4%,3%) scale(1.06) rotate(3deg)}100%{transform:translate(-2%,5%) scale(.96) rotate(8deg)}}@keyframes bgPulse{0%{filter:brightness(1)}45%{filter:brightness(1.18)}100%{filter:brightness(1)}}@keyframes bgPulseStrong{0%{filter:brightness(1)}45%{filter:brightness(1.4)}100%{filter:brightness(1)}}@keyframes bgPulseMax{0%{filter:brightness(1)}45%{filter:brightness(1.75)}100%{filter:brightness(1)}}.timer-head,.timer-hero,.stats,.intervals,.footer-nav{position:relative;z-index:1}.timer-head{flex:0 0 auto;padding-top:calc(env(safe-area-inset-top) + 8px);min-height:calc(70px + env(safe-area-inset-top));align-items:flex-end}.timer-head .icon-btn{flex:0 0 52px;align-self:flex-end}.progress{height:5px;flex:1;margin-bottom:23px;border-radius:999px;background:rgba(255,255,255,.18);overflow:hidden}.progress i{display:block;height:100%;background:#fff;width:0%}.timer-hero{text-align:center;padding-top:14px;flex:0 0 auto}.timer-sub{font-size:14px;color:#ddd}.phase-title{font-size:clamp(34px,10vw,48px);margin-top:10px}.timer-number{font-family:'Russo One';font-size:clamp(115px,34vw,170px);line-height:.9}.timer-total{font-size:16px;color:#ddd}.stats{display:grid;grid-template-columns:repeat(3,1fr);margin-top:12px;flex:0 0 auto;border-radius:20px;background:rgba(8,8,8,.58);backdrop-filter:blur(22px);border:1px solid rgba(255,255,255,.11);padding:12px 4px}.stats div{text-align:center;border-right:1px solid rgba(255,255,255,.1)}.stats div:last-child{border-right:0}.stats span{font-size:11px;color:#aaa;display:block}.stats b{font-size:22px}.intervals{height:auto;min-height:0;overflow:auto;margin-top:10px;scrollbar-width:none;padding-bottom:82px}.intervals::-webkit-scrollbar{display:none}.int-row{width:100%;min-height:58px;margin-bottom:7px;border-radius:17px;border:1px solid rgba(255,255,255,.16);background:rgba(5,5,5,.62);backdrop-filter:blur(18px);display:grid;grid-template-columns:30px 1fr 65px 26px;align-items:center;padding:0 10px;text-align:left}.int-row.current{border-color:#fff;background:rgba(255,255,255,.11)}.dot{width:23px;height:23px;border-radius:50%;border:1px solid #888;justify-self:end}.current .dot{background:#fff}.footer-nav{display:grid;grid-template-columns:58px 1fr 58px;align-items:center;position:fixed!important;left:14px;right:14px;bottom:0;z-index:6;padding:8px 0 8px;margin:0;background:linear-gradient(to top,rgba(5,5,5,.24),rgba(5,5,5,0));}.footer-nav button{width:56px;height:56px;border-radius:17px;border:1px solid rgba(255,255,255,.14);background:rgba(5,5,5,.58);font-size:38px}.footer-nav div{text-align:center}.footer-nav small{display:block;font-size:9px;letter-spacing:.15em;color:#888}.footer-nav b{font-size:30px;font-weight:400}.modal,.numpad{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.6);backdrop-filter:blur(18px);display:flex;align-items:flex-end;padding:14px}.modal-card,.numpad-card{width:100%;border-radius:26px;background:#111;border:1px solid rgba(255,255,255,.16);padding:18px}.modal-card h3{font-size:26px;margin:8px 0}.modal-card p{color:#aaa}.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.modal-actions button{height:54px;border-radius:16px;border:1px solid rgba(255,255,255,.18);background:#171717}.modal-actions .light{background:#fff;color:#000}.numpad-value{font-size:56px;text-align:center;margin:8px 0 16px}.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.keys button{height:66px;border-radius:17px;border:1px solid rgba(255,255,255,.14);background:#151515;font-size:27px}
-.timer-control-icon{width:28px;height:28px;stroke-width:2.2}
-.footer-nav button{display:grid;place-items:center;padding:0;line-height:0}
-.footer-arrow{width:30px;height:30px;stroke-width:2.4}
-@media (orientation:landscape) and (max-height:700px){
-  .timer{grid-template-rows:auto auto auto minmax(0,1fr) auto}
-  .timer-head{padding-top:calc(env(safe-area-inset-top) + 8px);min-height:calc(62px + env(safe-area-inset-top));align-items:flex-end}
-  .timer-head .icon-btn{width:48px;height:48px;flex-basis:48px}
-  .timer-control-icon{width:25px;height:25px}
-  .progress{margin-bottom:21px}
-  .timer-hero{padding-top:2px}
-  .timer-sub{font-size:12px;line-height:1.1}
-  .phase-title{font-size:30px;margin-top:4px;line-height:1}
-  .timer-number{font-size:70px;line-height:.86}
-  .timer-total{font-size:12px;line-height:1}
-  .stats{margin-top:6px;padding:5px 4px;border-radius:14px}
-  .stats span{font-size:9px}
-  .stats b{font-size:17px;line-height:1.05}
-  .intervals{margin-top:6px;padding-bottom:68px}
-  .int-row{min-height:42px;margin-bottom:5px;border-radius:13px}
-  .footer-nav{padding:5px 0 5px;grid-template-columns:52px 1fr 52px;left:14px;right:14px;bottom:0}
-  .footer-nav button{width:50px;height:50px;border-radius:15px}
-  .footer-nav small{font-size:8px}
-  .footer-nav b{font-size:24px;line-height:1}
-  .footer-arrow{width:26px;height:26px}
-}
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta id="themeColor" name="theme-color" content="#07190d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Pulse Timer</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600&family=Russo+One&display=swap');
+:root{--chrome:#07190d;--glass:rgba(5,16,8,.62);--line:rgba(255,255,255,.18)}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+html,body{margin:0;width:100%;height:100%;background:var(--chrome);overflow:hidden;overscroll-behavior:none;color:#fff;font-family:Oswald,system-ui,sans-serif}
+body{touch-action:pan-x pan-y}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+.hidden{display:none!important}
+#app{position:fixed;inset:0;width:100%;height:100dvh;min-height:100dvh;background:var(--chrome);overflow:hidden}
 
-/* === TIMER LAYOUT HARD OVERRIDE v3 === */
-.timer{
-  display:flex!important;
-  flex-direction:column!important;
-  position:fixed!important;
-  inset:0!important;
-  width:100vw!important;
-  height:100dvh!important;
-  min-height:100dvh!important;
-  padding:0 14px!important;
-  overflow:hidden!important;
-}
-.phase-bg:before,.phase-bg:after{
-  filter:blur(28px) saturate(150%)!important;
-}
-.timer-head{
-  position:relative!important;
-  flex:0 0 auto!important;
-  min-height:0!important;
-  height:calc(64px + env(safe-area-inset-top))!important;
-  padding:calc(env(safe-area-inset-top) + 14px) 0 0!important;
-  align-items:flex-start!important;
-}
-.timer-head .icon-btn{
-  width:52px!important;
-  height:52px!important;
-  flex:0 0 52px!important;
-  align-self:flex-start!important;
-  backdrop-filter:blur(6px)!important;
-  -webkit-backdrop-filter:blur(6px)!important;
-}
-.progress{
-  align-self:flex-start!important;
-  margin:24px 8px 0!important;
-}
-.timer-hero{
-  flex:0 0 auto!important;
-  padding-top:12px!important;
-}
-.stats{
-  flex:0 0 auto!important;
-}
-.intervals{
-  position:relative!important;
-  flex:1 1 0!important;
-  min-height:0!important;
-  height:auto!important;
-  overflow-y:auto!important;
-  padding-bottom:72px!important;
-  margin-bottom:0!important;
-}
-.footer-nav{
-  position:absolute!important;
-  left:14px!important;
-  right:14px!important;
-  bottom:0!important;
-  flex:0 0 64px!important;
-  width:auto!important;
-  height:64px!important;
-  margin:0!important;
-  padding:4px 0 2px!important;
-  background:transparent!important;
-  align-items:center!important;
-}
-.footer-nav button,
-.footer-nav div{
-  align-self:center!important;
-  margin:0!important;
-  transform:none!important;
-}
-@media (orientation:landscape) and (max-height:700px){
-  .timer{
-    padding:0 14px!important;
-  }
-  .timer-head{
-    height:calc(58px + env(safe-area-inset-top))!important;
-    padding-top:calc(env(safe-area-inset-top) + 12px)!important;
-  }
-  .timer-head .icon-btn{
-    width:48px!important;
-    height:48px!important;
-    flex-basis:48px!important;
-  }
-  .progress{
-    margin:21px 8px 0!important;
-  }
-  .timer-hero{
-    padding-top:0!important;
-  }
-  .intervals{
-    flex:1 1 0!important;
-    min-height:0!important;
-    padding-bottom:60px!important;
-  }
-  .footer-nav{
-    height:56px!important;
-    flex-basis:56px!important;
-    padding:2px 0!important;
-    margin:0!important;
-  }
-}
+/* splash: initial load only */
+.splash{position:fixed;inset:0;z-index:9999;background:#000;display:grid;place-items:center;overflow:hidden}
+.splash.hide{animation:splashOut .42s ease forwards}
+.logo-wrap{text-align:center;animation:logoIn .85s ease both}
+.logo{width:150px;filter:drop-shadow(0 0 24px rgba(255,255,255,.2))}
+.brand{font-family:'Russo One';font-size:17px;letter-spacing:.28em;margin-top:14px}
+.rings{position:absolute;width:72vmin;height:72vmin;border-radius:50%;border:1px solid rgba(255,255,255,.10);box-shadow:0 0 0 48px rgba(255,255,255,.018),0 0 0 96px rgba(255,255,255,.010);animation:ring 1.45s ease-out infinite}
+@keyframes logoIn{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@keyframes ring{from{transform:scale(.74);opacity:.2}to{transform:scale(1.12);opacity:0}}
+@keyframes splashOut{to{opacity:0;visibility:hidden}}
 
-/* === TIMER SAFE AREA + BACKGROUND FIX v4 === */
-.timer{
-  padding-bottom:0!important;
-  background:transparent!important;
-}
-.phase-bg{
-  position:fixed!important;
-  top:-48px!important;
-  right:-24px!important;
-  bottom:-120px!important;
-  left:-24px!important;
-  width:auto!important;
-  height:auto!important;
-  min-height:calc(100dvh + 168px)!important;
-  pointer-events:none!important;
-}
-.phase-bg:before,
-.phase-bg:after{
-  opacity:.80!important;
-  filter:blur(30px) saturate(138%)!important;
-}
-.timer-head{
-  height:calc(82px + env(safe-area-inset-top))!important;
-  padding-top:calc(env(safe-area-inset-top) + 30px)!important;
-}
-.timer-head .icon-btn{
-  align-self:flex-start!important;
-}
-.progress{
-  margin-top:24px!important;
-}
-.intervals{
-  padding-bottom:calc(72px + env(safe-area-inset-bottom))!important;
-}
-.footer-nav{
-  bottom:env(safe-area-inset-bottom)!important;
-  padding-bottom:2px!important;
-}
-@media (orientation:landscape) and (max-height:700px){
-  .timer-head{
-    height:calc(76px + env(safe-area-inset-top))!important;
-    padding-top:calc(env(safe-area-inset-top) + 28px)!important;
-  }
-  .progress{
-    margin-top:21px!important;
-  }
-  .intervals{
-    padding-bottom:calc(60px + env(safe-area-inset-bottom))!important;
-  }
-  .footer-nav{
-    bottom:env(safe-area-inset-bottom)!important;
-  }
-}
+/* shared */
+.screen,.editor,.timer{position:fixed;inset:0}
+.icon-btn{border:1px solid rgba(255,255,255,.28);background:rgba(5,10,7,.62);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:grid;place-items:center;padding:0}
+.ui-icon{width:24px;height:24px;display:block;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
-/* === TIMER SAFE AREA + BOOT SPLASH FIX v5 === */
-:root{--pulse-chrome:#050505}
-html,body,#app{
-  background:var(--pulse-chrome)!important;
-}
-.timer{
-  background:var(--pulse-chrome)!important;
-}
-.phase-bg{
-  bottom:-180px!important;
-}
-.footer-nav{
-  bottom:0!important;
-  height:calc(64px + env(safe-area-inset-bottom))!important;
-  padding:4px 0 max(2px,env(safe-area-inset-bottom))!important;
-}
-.intervals{
-  padding-bottom:calc(72px + env(safe-area-inset-bottom))!important;
-}
+/* home */
+.screen{padding:max(18px,env(safe-area-inset-top)) 16px max(16px,env(safe-area-inset-bottom));background:radial-gradient(circle at 18% 5%,#252525 0,transparent 34%),radial-gradient(circle at 82% 92%,#181818 0,transparent 36%),#050505}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.eyebrow{font-size:10px;letter-spacing:.23em;color:#8c8c8c}
+h1,h2,h3,.phase-title{font-family:'Russo One',sans-serif}
+h1{font-size:38px;margin:6px 0 0}
+.topbar .icon-btn{width:52px;height:52px;border-radius:50%}
+.settings{margin:14px 0;border:1px solid rgba(255,255,255,.10);border-radius:20px;background:#111;padding:8px 14px}
+.settings label{height:52px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.07)}
+.settings label:last-child{border:0}
+.switch{position:relative;width:48px;height:28px}
+.switch input{position:absolute;opacity:0;pointer-events:none}
+.track{position:absolute;inset:0;border-radius:999px;background:#292929;border:1px solid rgba(255,255,255,.12)}
+.track:after{content:"";position:absolute;width:22px;height:22px;left:2px;top:2px;border-radius:50%;background:#8c8c8c;transition:.18s}
+.switch input:checked+.track{background:#f1f1f1}
+.switch input:checked+.track:after{transform:translateX(20px);background:#111}
+.cards{height:calc(100dvh - 112px - env(safe-area-inset-top));overflow:auto;padding:14px 0 100px;scrollbar-width:none}
+.cards::-webkit-scrollbar{display:none}
+.card{border:1px solid rgba(255,255,255,.11);border-radius:24px;background:linear-gradient(155deg,#171717,#080808);padding:18px;margin-bottom:12px}
+.card-top{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.card h3{font-size:25px;margin:0}
+.card-actions{display:flex;gap:8px}
+.small-btn{width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:#111;display:grid;place-items:center;padding:0}
+.card-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:16px}
+.card-stats span{display:block;font-size:11px;color:#888}
+.card-stats b{font-size:23px;font-weight:500}
+.card-foot{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);font-size:12px;color:#999}
+.fab{position:absolute;right:18px;bottom:max(18px,env(safe-area-inset-bottom));width:62px;height:62px;border-radius:50%;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.08);backdrop-filter:blur(16px);display:grid;place-items:center}
+
+/* editor */
+.editor{overflow:auto;background:#050505;padding:max(16px,env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom))}
+.editor-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.editor-head .icon-btn{width:50px;height:50px;border-radius:50%;font-size:30px}
+.editor-head h2{font-size:26px;margin:0}
+.text-btn{border:0;background:transparent;padding:12px 2px;font-size:14px;letter-spacing:.08em}
+.name-input{width:100%;height:66px;border-radius:20px;border:1px solid rgba(255,255,255,.12);background:#111;color:#fff;padding:0 16px;font-family:'Russo One';font-size:24px}
+.editor-list{margin-top:12px;border:1px solid rgba(255,255,255,.1);border-radius:24px;background:#0d0d0d;overflow:hidden}
+.row{display:flex;align-items:center;justify-content:space-between;min-height:78px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.07)}
+.row:last-child{border:0}
+.row>span{font-size:16px;color:#ddd;max-width:46%}
+.step{display:grid;grid-template-columns:46px 88px 46px;gap:7px;align-items:center}
+.step button{height:46px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:#111;font-size:24px}
+.step .val{border:0;background:transparent;font-size:26px}
+.step small{font-size:11px;color:#888;margin-left:2px}
+.start-btn{width:100%;height:66px;margin-top:14px;border-radius:21px;border:1px solid rgba(255,255,255,.55);background:rgba(255,255,255,.08);font-family:'Russo One';font-size:21px}
+.delete-btn{width:100%;border:0;background:transparent;color:#888;padding:18px}
+
+/* timer */
+.timer{padding:0 18px;background:var(--chrome);overflow:hidden;isolation:isolate;display:flex;flex-direction:column}
+.phase-bg{position:fixed;z-index:0;top:-80px;left:-42px;right:-42px;bottom:-240px;background:var(--phase-base);overflow:hidden;pointer-events:none}
+.phase-bg:before,.phase-bg:after{content:"";position:absolute;border-radius:50%;mix-blend-mode:screen;filter:blur(40px) saturate(118%);opacity:.56;animation:morph 7s ease-in-out infinite alternate}
+.phase-bg:before{width:118%;height:62%;left:-9%;top:12%;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.46) 0 4%,var(--a) 22%,var(--b) 54%,transparent 75%)}
+.phase-bg:after{width:100%;height:48%;left:0;bottom:6%;background:radial-gradient(circle at 50% 50%,var(--c) 0 12%,var(--a) 38%,transparent 72%);animation-duration:5.5s}
+.phase-bg.prep{--a:#b8ff20;--b:#27ec58;--c:#dfff79;--phase-base:#10361a}
+.phase-bg.work{--a:#ff4227;--b:#704cff;--c:#ffd15d;--phase-base:#260b13}
+.phase-bg.rest{--a:#5577ff;--b:#7555e5;--c:#aee1ff;--phase-base:#0b1631}
+@keyframes morph{from{transform:translate(-3%,-2%) scale(.94)}to{transform:translate(3%,4%) scale(1.05)}}
+.timer>*:not(.phase-bg){position:relative;z-index:1}
+.timer-head{height:calc(98px + env(safe-area-inset-top));padding-top:calc(env(safe-area-inset-top) + 24px);display:flex;align-items:flex-start;gap:12px;flex:0 0 auto}
+.timer-head .icon-btn{width:58px;height:58px;flex:0 0 58px;border-radius:50%;background:rgba(5,15,8,.64)}
+.timer-control-icon{width:30px;height:30px;stroke-width:2.35}
+.progress{height:6px;flex:1;margin:26px 10px 0;border-radius:999px;background:rgba(255,255,255,.28);overflow:hidden}
+.progress i{display:block;height:100%;border-radius:999px;background:rgba(226,255,214,.92);width:0%}
+.timer-hero{text-align:center;flex:0 0 auto;padding-top:2px}
+.timer-sub{font-size:clamp(16px,4.5vw,21px);line-height:1;color:rgba(255,255,255,.74)}
+.phase-title{font-size:clamp(44px,9vw,64px);line-height:1;margin-top:22px}
+.timer-number{font-family:'Russo One';font-size:clamp(150px,34vw,220px);line-height:.82;margin-top:24px}
+.timer-total{font-size:clamp(20px,5vw,28px);margin-top:24px;color:rgba(255,255,255,.52)}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);min-height:116px;margin-top:28px;border-radius:28px;background:rgba(5,22,8,.58);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);padding:18px 4px;flex:0 0 auto}
+.stats div{text-align:center;display:flex;flex-direction:column;justify-content:center;border-right:1px solid rgba(255,255,255,.13)}
+.stats div:last-child{border:0}
+.stats span{font-size:clamp(14px,3.8vw,19px);color:rgba(255,255,255,.58)}
+.stats b{font-size:clamp(32px,8.2vw,44px);line-height:.95;margin-top:11px}
+.intervals{flex:1 1 0;min-height:0;overflow:auto;margin-top:18px;padding-bottom:calc(126px + env(safe-area-inset-bottom));scrollbar-width:none}
+.intervals::-webkit-scrollbar{display:none}
+.int-row{width:100%;min-height:88px;margin-bottom:12px;border-radius:25px;border:1px solid rgba(255,255,255,.15);background:rgba(4,18,6,.60);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:grid;grid-template-columns:42px minmax(0,1fr) max-content;gap:10px;align-items:center;padding:0 20px;text-align:left}
+.int-row.current{border:2px solid rgba(255,255,255,.90);background:rgba(141,255,58,.18)}
+.int-index{font-size:clamp(20px,5vw,26px)}
+.int-label{font-family:'Russo One';font-size:clamp(20px,5.1vw,27px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.int-duration{font-size:clamp(27px,6.5vw,36px);font-weight:600;white-space:nowrap}
+.footer-nav{position:absolute!important;left:20px;right:20px;bottom:max(12px,env(safe-area-inset-bottom));height:86px;display:grid;grid-template-columns:66px 1fr 66px;align-items:center;z-index:5}
+.footer-nav button{width:64px;height:64px;border-radius:50%;border:1px solid rgba(255,255,255,.24);background:rgba(4,16,7,.68);display:grid;place-items:center;padding:0}
+.footer-nav>div{text-align:center}
+.footer-nav small{display:block;font-size:12px;letter-spacing:.22em;color:rgba(255,255,255,.54)}
+.footer-nav b{display:block;margin-top:7px;font-size:clamp(38px,10vw,52px);line-height:.86;font-weight:500}
+.footer-arrow{width:31px;height:31px}
+
+/* overlays */
+.modal,.numpad{position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.62);backdrop-filter:blur(18px);display:flex;align-items:flex-end;padding:14px}
+.modal-card,.numpad-card{width:100%;border-radius:26px;background:#111;border:1px solid rgba(255,255,255,.16);padding:18px}
+.modal-card h3{font-size:26px;margin:8px 0}
+.modal-card p{color:#aaa}
+.modal-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.modal-actions button{height:54px;border-radius:16px;border:1px solid rgba(255,255,255,.18);background:#171717}
+.modal-actions .light{background:#fff;color:#000}
+.numpad-value{font-size:54px;text-align:center;margin:6px 0 14px}
+.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.keys button{height:64px;border-radius:17px;border:1px solid rgba(255,255,255,.14);background:#151515;font-size:27px}
+
 @media (orientation:landscape) and (max-height:700px){
-  .footer-nav{
-    bottom:0!important;
-    height:calc(56px + env(safe-area-inset-bottom))!important;
-    padding:2px 0 max(2px,env(safe-area-inset-bottom))!important;
-  }
-  .intervals{
-    padding-bottom:calc(64px + env(safe-area-inset-bottom))!important;
-  }
+  .timer{padding:0 16px}
+  .timer-head{height:calc(74px + env(safe-area-inset-top));padding-top:calc(env(safe-area-inset-top) + 16px)}
+  .timer-head .icon-btn{width:50px;height:50px;flex-basis:50px}
+  .progress{height:5px;margin:22px 9px 0}
+  .timer-sub{font-size:12px}
+  .phase-title{font-size:30px;margin-top:7px}
+  .timer-number{font-size:76px;margin-top:8px}
+  .timer-total{font-size:13px;margin-top:7px}
+  .stats{min-height:58px;margin-top:7px;padding:7px 4px;border-radius:16px}
+  .stats span{font-size:9px}.stats b{font-size:19px;margin-top:4px}
+  .intervals{margin-top:7px;padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+  .int-row{min-height:44px;margin-bottom:5px;border-radius:14px;grid-template-columns:28px minmax(0,1fr) max-content;padding:0 12px}
+  .int-index{font-size:15px}.int-label{font-size:16px}.int-duration{font-size:20px}
+  .footer-nav{bottom:max(4px,env(safe-area-inset-bottom));height:58px;grid-template-columns:52px 1fr 52px}
+  .footer-nav button{width:50px;height:50px}.footer-nav small{font-size:8px}.footer-nav b{margin-top:3px;font-size:26px}
 }
-</style></head><body><div id="app"><div class="splash" id="splash"><div class="rings"></div><div class="logo-wrap"><svg class="logo" viewBox="0 0 220 220" aria-label="Pulse Timer logo"><circle cx="110" cy="110" r="78" fill="none" stroke="white" stroke-width="8" opacity=".92"/><path d="M35 112h42l14-24 20 64 19-82 17 42h38" fill="none" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/><circle cx="168" cy="47" r="7" fill="white"/></svg><div class="brand">PULSE TIMER</div></div></div><main class="screen" id="screen"><div class="topbar"><div><div class="eyebrow">PULSE TIMER</div><h1>ТРЕНИРОВКИ</h1></div><button class="icon-btn" id="settingsBtn" aria-label="Настройки"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.7 2.6h4.6l.7 2.2 2 .8 2.1-1.1 3.2 3.2-1.1 2.1.8 2 .2.7-.2 1.3-.8 2 1.1 2.1-3.2 3.2-2.1-1.1-2 .8-.7 2.2H9.7L9 19.8l-2-.8-2.1 1.1-3.2-3.2 1.1-2.1-.8-2-.2-.7.2-1.3.8-2-1.1-2.1 3.2-3.2L7 6.6l2-.8.7-2.2Z"/><circle cx="12" cy="12" r="3.1"/></svg></button></div><div class="settings hidden" id="settings"><label><span>Звук</span><span class="switch-control"><input type="checkbox" id="soundToggle" checked><span class="switch-track"></span></span></label><label><span>Вибрация</span><span class="switch-control"><input type="checkbox" id="vibrateToggle" checked><span class="switch-track"></span></span></label></div><section class="cards" id="cards"></section><button class="fab" id="addBtn" aria-label="Добавить тренировку"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button></main><section class="editor hidden" id="editor"><div class="editor-head"><button class="icon-btn" id="editorBack">‹</button><h2>ТРЕНИРОВКА</h2><button class="text-btn" id="saveBtn">ГОТОВО</button></div><input class="name-input" id="nameInput" /><div class="editor-list" id="editorList"></div><button class="start-btn" id="editorStart"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5-10-6.5Z"/></svg><span class="start-label">СТАРТ</span></button><button class="delete-btn" id="deleteBtn">Удалить тренировку</button></section><section class="timer hidden" id="timer"><div class="phase-bg prep" id="phaseBg"></div><div class="timer-head"><button class="icon-btn" id="exitBtn" aria-label="Назад"><svg class="ui-icon timer-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button><div class="progress"><i id="progressBar"></i></div><button class="icon-btn" id="pauseBtn" aria-label="Пауза"><svg class="ui-icon timer-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg></button></div><div class="timer-hero"><div class="timer-sub" id="timerSub"></div><div class="phase-title" id="phaseTitle">ПОДГОТОВКА</div><div class="timer-number" id="timerNumber">10</div><div class="timer-total" id="timerTotal">/ 10 сек</div></div><div class="stats"><div><span>Прошло</span><b id="elapsed">0:00</b></div><div><span>Осталось</span><b id="remainTotal">0:00</b></div><div><span>Всего</span><b id="allTotal">0:00</b></div></div><div class="intervals" id="intervals"></div><div class="footer-nav"><button id="prevBtn" aria-label="Предыдущий интервал"><svg class="ui-icon footer-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 8 12l7 7"/></svg></button><div><small>ИНТЕРВАЛ</small><b id="intervalCounter">1/1</b></div><button id="nextBtn" aria-label="Следующий интервал"><svg class="ui-icon footer-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"/></svg></button></div></section><div class="modal hidden" id="exitModal"><div class="modal-card"><div class="eyebrow">ТРЕНИРОВКА ИДЁТ</div><h3>Выйти из тренировки?</h3><p>Текущий прогресс будет сброшен.</p><div class="modal-actions"><button id="continueBtn">Продолжить</button><button id="confirmExitBtn" class="light">Выйти</button></div></div></div><div class="numpad hidden" id="numpad"><div class="numpad-card"><div class="numpad-value" id="numpadValue">0</div><div class="keys" id="keys"></div></div></div></div><script>const DEFAULTS = [{id:'press',name:'ПРЕСС',prep:10,work:30,rest:80,cycles:9,sets:1,setRest:150,coolDown:0},{id:'training',name:'ТРЕНИРОВКА',prep:30,work:30,rest:150,cycles:12,sets:3,setRest:180,coolDown:0}];const STORAGE='pulse-timer-standalone-v2';const LEGACY_STORAGE='pulse-timer-standalone-v1';const PREFS='pulse-timer-prefs-v1';let storedWorkouts=null;try{storedWorkouts=JSON.parse(localStorage.getItem(STORAGE)||localStorage.getItem(LEGACY_STORAGE)||'null')}catch{}if(!Array.isArray(storedWorkouts))storedWorkouts=[];const normalizeWorkout=w=>({id:String(w?.id||crypto.randomUUID()),name:String(w?.name||'ТРЕНИРОВКА').toUpperCase(),prep:Math.max(0,Number(w?.prep??10)||0),work:Math.max(1,Number(w?.work??30)||30),rest:Math.max(0,Number(w?.rest??60)||0),cycles:Math.max(1,Number(w?.cycles??8)||8),sets:Math.max(1,Number(w?.sets??1)||1),setRest:Math.max(0,Number(w?.setRest??120)||0),coolDown:Math.max(0,Number(w?.coolDown??0)||0)});let workouts=DEFAULTS.map(d=>({...d}));for(const raw of storedWorkouts){if(!raw||typeof raw!=='object')continue;const w=normalizeWorkout(raw);const idx=workouts.findIndex(x=>x.id===w.id);if(idx>=0)workouts[idx]={...workouts[idx],...w};else workouts.push(w)}localStorage.setItem(STORAGE,JSON.stringify(workouts));let editing=null, active=null, phases=[], phaseIndex=0, remaining=0, running=false, timerId=null, numField=null, numDraft='0';let prefs={sound:true,vibrate:true};try{prefs={...prefs,...JSON.parse(localStorage.getItem(PREFS)||'{}')}}catch{}let sound=!!prefs.sound, vibrate=!!prefs.vibrate;const $=id=>document.getElementById(id);const fmt=s=>`${Math.floor(Math.max(0,s)/60)}:${String(Math.max(0,s)%60).padStart(2,'0')}`;const HAPTICS={entry:[24,32,46],tap:8,toggle:18,start:[28,36,58],phaseWork:[38,34,82],phaseRest:[58,42,34],phasePrep:[24,32,45],countdown3:16,countdown2:28,countdown1:[42,26,68],finish:[70,45,120,55,170],exit:18};async function haptic(kind='tap'){if(!vibrate)return false;const pattern=Array.isArray(kind)||typeof kind==='number'?kind:(HAPTICS[kind]||HAPTICS.tap);try{const cap=window.Capacitor?.Plugins?.Haptics;if(cap){const strong=kind==='finish'||kind==='phaseWork'||kind==='countdown1'||kind==='start';if(cap.impact) await cap.impact({style:strong?'HEAVY':'MEDIUM'});else if(cap.vibrate) await cap.vibrate({duration:Array.isArray(pattern)?Math.max(...pattern):pattern});return true;}}catch{}try{const bridge=window.webkit?.messageHandlers?.PulseHaptics||window.webkit?.messageHandlers?.haptics;if(bridge){bridge.postMessage({kind,pattern});return true;}}catch{}try{if(typeof navigator.vibrate==='function') return navigator.vibrate(pattern);}catch{}return false;}const buzz=p=>haptic(p);function beep(freq=900,dur=.11){if(!sound) return;try{const A=window.AudioContext||window.webkitAudioContext, c=new A(), o=c.createOscillator(), g=c.createGain();o.frequency.value=freq;o.type='square';g.gain.value=.16;o.connect(g);g.connect(c.destination);o.start();g.gain.exponentialRampToValueAtTime(.001,c.currentTime+dur);o.stop(c.currentTime+dur);}catch{}}function save(){localStorage.setItem(STORAGE,JSON.stringify(workouts));}function build(w){const a=[];if(w.prep>0)a.push({label:'ПОДГОТОВКА',duration:w.prep,cycle:0,set:1,type:'prep'});for(let s=1;s<=w.sets;s++){for(let c=1;c<=w.cycles;c++){a.push({label:'РАБОТА',duration:w.work,cycle:c,set:s,type:'work'});if(c<w.cycles&&w.rest>0)a.push({label:'ОТДЫХ',duration:w.rest,cycle:c,set:s,type:'rest'});}if(s<w.sets&&w.setRest>0)a.push({label:'ОТДЫХ МЕЖДУ ПОДХОДАМИ',duration:w.setRest,cycle:w.cycles,set:s,type:'rest'});}if(w.coolDown>0)a.push({label:'ЗАМИНКА',duration:w.coolDown,cycle:w.cycles,set:w.sets,type:'rest'});return a;}function total(w){return build(w).reduce((x,p)=>x+p.duration,0)}function renderCards(){$('cards').innerHTML=workouts.map(w=>`<article class="card"><div class="card-top"><h3>${w.name}</h3><div class="card-actions"><button class="small-btn edit" data-id="${w.id}" aria-label="Изменить"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg></button><button class="small-btn play" data-id="${w.id}" aria-label="Запустить"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5-10-6.5Z"/></svg></button></div></div><div class="card-stats"><div><span>Работа</span><b>${w.work}</b></div><div><span>Отдых</span><b>${w.rest}</b></div><div><span>Циклы</span><b>${w.cycles}</b></div><div><span>Подходы</span><b>${w.sets}</b></div></div><div class="card-foot">Всего: ${fmt(total(w))} · ${build(w).length} интервалов</div></article>`).join('');document.querySelectorAll('.edit').forEach(b=>b.onclick=()=>openEditor(b.dataset.id));document.querySelectorAll('.play').forEach(b=>b.onclick=()=>startWorkout(workouts.find(w=>w.id===b.dataset.id)));}function show(id){['screen','editor','timer'].forEach(x=>$(x).classList.add('hidden'));$(id).classList.remove('hidden');}function openEditor(id){const w=id?workouts.find(w=>w.id===id):{id:crypto.randomUUID(),name:'НОВАЯ ТРЕНИРОВКА',prep:10,work:30,rest:60,cycles:8,sets:1,setRest:120,coolDown:0};editing={...w};$('nameInput').value=editing.name;renderEditor();show('editor');}const meta=[['prep','Подготовка','сек',0,5],['work','Работа','сек',1,5],['rest','Отдых','сек',0,5],['cycles','Циклы','',1,1],['sets','Подходы','',1,1],['setRest','Отдых между подходами','сек',0,5],['coolDown','Заминка','сек',0,5]];function renderEditor(){$('editorList').innerHTML=meta.map(([k,l,u,min,step])=>`<div class="row"><span>${l}</span><div class="step"><button onclick="adjust('${k}',-${step},${min})">−</button><button class="val" onclick="openPad('${k}')">${editing[k]}${u?`<small>${u}</small>`:''}</button><button onclick="adjust('${k}',${step},${min})">＋</button></div></div>`).join('');}window.adjust=(k,d,min)=>{editing[k]=Math.max(min,editing[k]+d);renderEditor();haptic('tap')};window.openPad=k=>{numField=k;numDraft=String(editing[k]);$('numpadValue').textContent=numDraft;$('numpad').classList.remove('hidden');};const keySet=['1','2','3','4','5','6','7','8','9','⌫','0','✓'];$('keys').innerHTML=keySet.map(k=>`<button data-k="${k}">${k}</button>`).join('');$('keys').onclick=e=>{const k=e.target.dataset.k;if(!k)return;haptic('tap');if(k==='⌫')numDraft=numDraft.slice(0,-1);else if(k==='✓'){editing[numField]=Math.max(meta.find(x=>x[0]===numField)[3],Number(numDraft||0));$('numpad').classList.add('hidden');renderEditor();return}else numDraft=(numDraft==='0'?k:(numDraft+k)).slice(0,5);$('numpadValue').textContent=numDraft||'0';};function startWorkout(w){active={...w};phases=build(active);phaseIndex=0;remaining=phases[0]?.duration||0;running=true;show('timer');renderTimer();startLoop();pulseStart();haptic('start');}function startLoop(){clearInterval(timerId);timerId=setInterval(()=>{if(!running)return;if(remaining>1){remaining--;countdownPulse();renderTimer();}else{if(phaseIndex<phases.length-1){phaseIndex++;remaining=phases[phaseIndex].duration;beep(phases[phaseIndex].type==='work'?1100:600,.16);haptic(phases[phaseIndex].type==='work'?'phaseWork':phases[phaseIndex].type==='prep'?'phasePrep':'phaseRest');renderTimer();pulseStart();}else{running=false;remaining=0;beep(850,.3);haptic('finish');renderTimer();}}},1000);}function pulseStart(){const bg=$('phaseBg');bg.classList.remove('pulse1','pulse2','pulse3');void bg.offsetWidth;bg.classList.add('pulse3');setTimeout(()=>bg.classList.remove('pulse3'),600)}function countdownPulse(){const bg=$('phaseBg');bg.classList.remove('pulse1','pulse2','pulse3');if(remaining<=3&&remaining>=1){void bg.offsetWidth;bg.classList.add(remaining===3?'pulse1':remaining===2?'pulse2':'pulse3');haptic(remaining===3?'countdown3':remaining===2?'countdown2':'countdown1');beep(1200,.07)}}function renderTimer(){const p=phases[phaseIndex];const phaseChrome=p.type==='prep'?'#183516':p.type==='work'?'#2c0a10':'#0d1438';document.documentElement.style.setProperty('--pulse-chrome',phaseChrome);document.documentElement.style.background=phaseChrome;document.body.style.background=phaseChrome;$('app').style.background=phaseChrome;const tc=document.getElementById('themeColor');if(tc)tc.setAttribute('content',phaseChrome);const  all=phases.reduce((s,x)=>s+x.duration,0), before=phases.slice(0,phaseIndex).reduce((s,x)=>s+x.duration,0), elapsed=before+(p.duration-remaining);$('phaseBg').className=`phase-bg ${p.type}`;$('timerSub').textContent=`Подход ${p.set}/${active.sets} · Цикл ${Math.max(1,p.cycle)}/${active.cycles}`;$('phaseTitle').textContent=p.label;$('timerNumber').textContent=remaining;$('timerTotal').textContent=`/ ${p.duration} сек`;$('elapsed').textContent=fmt(elapsed);$('remainTotal').textContent=fmt(all-elapsed);$('allTotal').textContent=fmt(all);$('progressBar').style.width=`${all?elapsed/all*100:0}%`;$('intervalCounter').textContent=`${phaseIndex+1}/${phases.length}`;$('intervals').innerHTML=phases.map((x,i)=>`<button class="int-row ${i===phaseIndex?'current':''}" data-i="${i}"><span>${i+1}</span><b>${x.label}</b><span>${x.duration} сек</span><i class="dot"></i></button>`).join('');document.querySelectorAll('.int-row').forEach(b=>b.onclick=()=>{phaseIndex=Number(b.dataset.i);remaining=phases[phaseIndex].duration;renderTimer();b.scrollIntoView({block:'center',behavior:'smooth'});pulseStart();haptic('tap')});setTimeout(()=>document.querySelector('.int-row.current')?.scrollIntoView({block:'center'}),20);}const setPauseVisual=()=>{$('pauseBtn').innerHTML=running?'<svg class="ui-icon timer-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6v12M15 6v12"/></svg>':'<svg class="ui-icon timer-control-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13l10-6.5-10-6.5Z"/></svg>'};$('pauseBtn').onclick=()=>{running=!running;setPauseVisual();haptic('tap')};$('prevBtn').onclick=()=>{phaseIndex=Math.max(0,phaseIndex-1);remaining=phases[phaseIndex].duration;renderTimer();pulseStart();haptic('tap')};$('nextBtn').onclick=()=>{phaseIndex=Math.min(phases.length-1,phaseIndex+1);remaining=phases[phaseIndex].duration;renderTimer();pulseStart();haptic('tap')};$('exitBtn').onclick=()=>{running=false;$('exitModal').classList.remove('hidden');haptic('exit')};$('continueBtn').onclick=()=>{$('exitModal').classList.add('hidden');running=true;haptic('tap')};$('confirmExitBtn').onclick=()=>{$('exitModal').classList.add('hidden');active=null;clearInterval(timerId);document.documentElement.style.setProperty('--pulse-chrome','#050505');document.documentElement.style.background='#050505';document.body.style.background='#050505';$('app').style.background='#050505';const tc=document.getElementById('themeColor');if(tc)tc.setAttribute('content','#000000');show('screen');renderCards();haptic('exit')};$('addBtn').onclick=()=>{openEditor(null);haptic('tap')};$('editorBack').onclick=()=>{show('screen');haptic('tap')};$('saveBtn').onclick=()=>{editing.name=$('nameInput').value.trim().toUpperCase()||'ТРЕНИРОВКА';const idx=workouts.findIndex(w=>w.id===editing.id);if(idx>=0)workouts[idx]=editing;else workouts.unshift(editing);save();renderCards();show('screen');haptic('tap');};$('editorStart').onclick=()=>{editing.name=$('nameInput').value.trim().toUpperCase()||'ТРЕНИРОВКА';startWorkout(editing)};$('deleteBtn').onclick=()=>{if(confirm('Удалить тренировку?')){workouts=workouts.filter(w=>w.id!==editing.id);save();renderCards();show('screen')}};$('settingsBtn').onclick=()=>$('settings').classList.toggle('hidden');$('soundToggle').checked=sound;$('vibrateToggle').checked=vibrate;const savePrefs=()=>localStorage.setItem(PREFS,JSON.stringify({sound,vibrate}));$('soundToggle').onchange=e=>{sound=e.target.checked;savePrefs();if(sound)beep(920,.08)};$('vibrateToggle').onchange=e=>{vibrate=e.target.checked;savePrefs();if(vibrate)haptic('toggle')};document.addEventListener('gesturestart',e=>e.preventDefault(),{passive:false});document.addEventListener('gesturechange',e=>e.preventDefault(),{passive:false});document.addEventListener('touchmove',e=>{if(e.touches.length>1)e.preventDefault()},{passive:false});document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});document.addEventListener('selectstart',e=>e.preventDefault());document.addEventListener('contextmenu',e=>e.preventDefault());renderCards();let splashEndTimer=null;const splashBootStarted=performance.now();
-function finishInitialSplash(){
-  const splash=$('splash');
-  if(!splash)return;
-  const minVisible=700;
-  const hardLimit=1800;
-  const waitLoad=document.readyState==='complete'
-    ? Promise.resolve()
-    : new Promise(resolve=>window.addEventListener('load',resolve,{once:true}));
-  const waitFonts=document.fonts?.ready
-    ? document.fonts.ready.catch(()=>{})
-    : Promise.resolve();
-  const assetsReady=Promise.all([waitLoad,waitFonts]);
-  const timeout=new Promise(resolve=>setTimeout(resolve,hardLimit));
-  Promise.race([assetsReady,timeout]).then(()=>{
-    const delay=Math.max(0,minVisible-(performance.now()-splashBootStarted));
-    setTimeout(()=>{
-      splash.classList.add('entering');
-      splashEndTimer=setTimeout(()=>{
-        splash.classList.add('hidden');
-        splash.classList.remove('entering');
-        splash.style.pointerEvents='none';
-      },470);
-    },delay);
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="splash" id="splash">
+    <div class="rings"></div>
+    <div class="logo-wrap">
+      <svg class="logo" viewBox="0 0 220 220" aria-label="Pulse Timer">
+        <circle cx="110" cy="110" r="78" fill="none" stroke="white" stroke-width="8" opacity=".92"/>
+        <path d="M35 112h42l14-24 20 64 19-82 17 42h38" fill="none" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="168" cy="47" r="7" fill="white"/>
+      </svg>
+      <div class="brand">PULSE TIMER</div>
+    </div>
+  </div>
+
+  <main class="screen" id="screen">
+    <div class="topbar">
+      <div><div class="eyebrow">PULSE TIMER</div><h1>ТРЕНИРОВКИ</h1></div>
+      <button class="icon-btn" id="settingsBtn" aria-label="Настройки">
+        <svg class="ui-icon" viewBox="0 0 24 24"><path d="M9.7 2.6h4.6l.7 2.2 2 .8 2.1-1.1 3.2 3.2-1.1 2.1.8 2 .2.7-.2 1.3-.8 2 1.1 2.1-3.2 3.2-2.1-1.1-2 .8-.7 2.2H9.7L9 19.8l-2-.8-2.1 1.1-3.2-3.2 1.1-2.1-.8-2-.2-.7.2-1.3.8-2-1.1-2.1 3.2-3.2L7 6.6l2-.8.7-2.2Z"/><circle cx="12" cy="12" r="3.1"/></svg>
+      </button>
+    </div>
+    <div class="settings hidden" id="settings">
+      <label><span>Звук</span><span class="switch"><input type="checkbox" id="soundToggle"><span class="track"></span></span></label>
+      <label><span>Вибрация</span><span class="switch"><input type="checkbox" id="vibrateToggle"><span class="track"></span></span></label>
+    </div>
+    <section class="cards" id="cards"></section>
+    <button class="fab" id="addBtn" aria-label="Добавить тренировку"><svg class="ui-icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+  </main>
+
+  <section class="editor hidden" id="editor">
+    <div class="editor-head">
+      <button class="icon-btn" id="editorBack" aria-label="Назад">‹</button>
+      <h2>ТРЕНИРОВКА</h2>
+      <button class="text-btn" id="saveBtn">ГОТОВО</button>
+    </div>
+    <input class="name-input" id="nameInput" maxlength="32" autocomplete="off" spellcheck="false">
+    <div class="editor-list" id="editorList"></div>
+    <button class="start-btn" id="editorStart">СТАРТ</button>
+    <button class="delete-btn" id="deleteBtn">Удалить тренировку</button>
+  </section>
+
+  <section class="timer hidden" id="timer">
+    <div class="phase-bg prep" id="phaseBg"></div>
+    <div class="timer-head">
+      <button class="icon-btn" id="exitBtn" aria-label="Назад"><svg class="ui-icon timer-control-icon" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button>
+      <div class="progress"><i id="progressBar"></i></div>
+      <button class="icon-btn" id="pauseBtn" aria-label="Пауза"><svg class="ui-icon timer-control-icon" viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg></button>
+    </div>
+
+    <div class="timer-hero">
+      <div class="timer-sub" id="timerSub"></div>
+      <div class="phase-title" id="phaseTitle">ПОДГОТОВКА</div>
+      <div class="timer-number" id="timerNumber">10</div>
+      <div class="timer-total" id="timerTotal">/ 10 сек</div>
+    </div>
+
+    <div class="stats">
+      <div><span>Осталось</span><b id="remainTotal">0:00</b></div>
+      <div><span>Всего</span><b id="allTotal">0:00</b></div>
+    </div>
+
+    <div class="intervals" id="intervals"></div>
+
+    <div class="footer-nav">
+      <button id="prevBtn" aria-label="Предыдущий интервал"><svg class="ui-icon footer-arrow" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button>
+      <div><small>ИНТЕРВАЛ</small><b id="intervalCounter">1/1</b></div>
+      <button id="nextBtn" aria-label="Следующий интервал"><svg class="ui-icon footer-arrow" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+    </div>
+  </section>
+
+  <div class="modal hidden" id="exitModal">
+    <div class="modal-card">
+      <div class="eyebrow">ТРЕНИРОВКА ИДЁТ</div>
+      <h3>Выйти из тренировки?</h3>
+      <p>Текущий прогресс будет сброшен.</p>
+      <div class="modal-actions"><button id="continueBtn">Продолжить</button><button id="confirmExitBtn" class="light">Выйти</button></div>
+    </div>
+  </div>
+
+  <div class="numpad hidden" id="numpad">
+    <div class="numpad-card">
+      <div class="numpad-value" id="numpadValue">0</div>
+      <div class="keys" id="keys"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  const $ = id => document.getElementById(id);
+  const uid = () => (crypto.randomUUID ? crypto.randomUUID() : 'w-' + Date.now() + '-' + Math.random().toString(16).slice(2));
+  const fmt = s => {
+    s = Math.max(0, Math.round(s));
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  };
+
+  const DEFAULTS = [
+    {id:'press',name:'ПРЕСС',prep:10,work:30,rest:80,cycles:9,sets:1,setRest:150,coolDown:0},
+    {id:'training',name:'ТРЕНИРОВКА',prep:30,work:30,rest:150,cycles:12,sets:3,setRest:180,coolDown:0}
+  ];
+
+  const STORAGE = 'pulse-timer-workouts-v3';
+  const PREFS = 'pulse-timer-prefs-v2';
+  const legacyKeys = ['pulse-timer-standalone-v2','pulse-timer-standalone-v1'];
+
+  const normalize = w => ({
+    id: String(w && w.id ? w.id : uid()),
+    name: String(w && w.name ? w.name : 'ТРЕНИРОВКА').toUpperCase(),
+    prep: Math.max(0, Number(w && w.prep != null ? w.prep : 10) || 0),
+    work: Math.max(1, Number(w && w.work != null ? w.work : 30) || 30),
+    rest: Math.max(0, Number(w && w.rest != null ? w.rest : 60) || 0),
+    cycles: Math.max(1, Number(w && w.cycles != null ? w.cycles : 8) || 8),
+    sets: Math.max(1, Number(w && w.sets != null ? w.sets : 1) || 1),
+    setRest: Math.max(0, Number(w && w.setRest != null ? w.setRest : 120) || 0),
+    coolDown: Math.max(0, Number(w && w.coolDown != null ? w.coolDown : 0) || 0)
   });
-}
-requestAnimationFrame(()=>haptic('entry'));
-finishInitialSplash();</script></body></html>
+
+  function loadWorkouts(){
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(STORAGE) || 'null'); } catch {}
+    if (!Array.isArray(saved)) {
+      for (const key of legacyKeys) {
+        try {
+          const x = JSON.parse(localStorage.getItem(key) || 'null');
+          if (Array.isArray(x)) { saved = x; break; }
+        } catch {}
+      }
+    }
+    if (!Array.isArray(saved)) saved = [];
+    const map = new Map(DEFAULTS.map(w => [w.id, {...w}]));
+    for (const raw of saved) {
+      if (!raw || typeof raw !== 'object') continue;
+      const w = normalize(raw);
+      map.set(w.id, map.has(w.id) ? {...map.get(w.id), ...w} : w);
+    }
+    return Array.from(map.values());
+  }
+
+  let workouts = loadWorkouts();
+  let prefs = {sound:true,vibrate:true};
+  try { prefs = {...prefs, ...JSON.parse(localStorage.getItem(PREFS) || '{}')}; } catch {}
+  let sound = !!prefs.sound;
+  let vibrate = !!prefs.vibrate;
+
+  let editing = null;
+  let active = null;
+  let phases = [];
+  let phaseIndex = 0;
+  let remainingMs = 0;
+  let deadline = 0;
+  let running = false;
+  let tickId = null;
+  let padField = null;
+  let padDraft = '0';
+
+  function saveWorkouts(){ localStorage.setItem(STORAGE, JSON.stringify(workouts)); }
+  function savePrefs(){ localStorage.setItem(PREFS, JSON.stringify({sound,vibrate})); }
+
+  function haptic(pattern=12){
+    if (!vibrate) return;
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch {}
+  }
+
+  function beep(freq=900,dur=.12){
+    if (!sound) return;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      const ctx = new AC();
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.type='square'; o.frequency.value=freq; g.gain.value=.14;
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); g.gain.exponentialRampToValueAtTime(.001, ctx.currentTime + dur);
+      o.stop(ctx.currentTime + dur);
+    } catch {}
+  }
+
+  function build(w){
+    const a = [];
+    if (w.prep > 0) a.push({label:'ПОДГОТОВКА',duration:w.prep,cycle:0,set:1,type:'prep'});
+    for (let s=1; s<=w.sets; s++) {
+      for (let c=1; c<=w.cycles; c++) {
+        a.push({label:'РАБОТА',duration:w.work,cycle:c,set:s,type:'work'});
+        if (c < w.cycles && w.rest > 0) a.push({label:'ОТДЫХ',duration:w.rest,cycle:c,set:s,type:'rest'});
+      }
+      if (s < w.sets && w.setRest > 0) a.push({label:'ОТДЫХ МЕЖДУ ПОДХОДАМИ',duration:w.setRest,cycle:w.cycles,set:s,type:'rest'});
+    }
+    if (w.coolDown > 0) a.push({label:'ЗАМИНКА',duration:w.coolDown,cycle:w.cycles,set:w.sets,type:'rest'});
+    return a;
+  }
+
+  function total(w){ return build(w).reduce((s,p)=>s+p.duration,0); }
+
+  function show(id){
+    ['screen','editor','timer'].forEach(x => $(x).classList.add('hidden'));
+    $(id).classList.remove('hidden');
+  }
+
+  function renderCards(){
+    $('cards').innerHTML = workouts.map(w => `
+      <article class="card">
+        <div class="card-top">
+          <h3>${escapeHtml(w.name)}</h3>
+          <div class="card-actions">
+            <button class="small-btn edit-btn" data-id="${w.id}" aria-label="Изменить">
+              <svg class="ui-icon" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg>
+            </button>
+            <button class="small-btn play-btn" data-id="${w.id}" aria-label="Запустить">
+              <svg class="ui-icon" viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5-10-6.5Z"/></svg>
+            </button>
+          </div>
+        </div>
+        <div class="card-stats">
+          <div><span>Работа</span><b>${w.work}</b></div>
+          <div><span>Отдых</span><b>${w.rest}</b></div>
+          <div><span>Циклы</span><b>${w.cycles}</b></div>
+          <div><span>Подходы</span><b>${w.sets}</b></div>
+        </div>
+        <div class="card-foot">Всего: ${fmt(total(w))} · ${build(w).length} интервалов</div>
+      </article>
+    `).join('');
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  const fields = [
+    ['prep','Подготовка','сек',0,5],
+    ['work','Работа','сек',1,5],
+    ['rest','Отдых','сек',0,5],
+    ['cycles','Циклы','',1,1],
+    ['sets','Подходы','',1,1],
+    ['setRest','Отдых между подходами','сек',0,5],
+    ['coolDown','Заминка','сек',0,5]
+  ];
+
+  function openEditor(id){
+    const found = id ? workouts.find(w => w.id === id) : null;
+    editing = found ? {...found} : {id:uid(),name:'НОВАЯ ТРЕНИРОВКА',prep:10,work:30,rest:60,cycles:8,sets:1,setRest:120,coolDown:0};
+    $('nameInput').value = editing.name;
+    $('deleteBtn').classList.toggle('hidden', !found);
+    renderEditor();
+    show('editor');
+  }
+
+  function renderEditor(){
+    $('editorList').innerHTML = fields.map(([k,label,unit,min,step]) => `
+      <div class="row">
+        <span>${label}</span>
+        <div class="step">
+          <button class="adjust-btn" data-field="${k}" data-delta="-${step}" data-min="${min}">−</button>
+          <button class="val pad-btn" data-field="${k}">${editing[k]}${unit ? `<small>${unit}</small>` : ''}</button>
+          <button class="adjust-btn" data-field="${k}" data-delta="${step}" data-min="${min}">＋</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function commitEditor(){
+    editing.name = ($('nameInput').value.trim() || 'ТРЕНИРОВКА').toUpperCase();
+    const idx = workouts.findIndex(w => w.id === editing.id);
+    if (idx >= 0) workouts[idx] = normalize(editing);
+    else workouts.unshift(normalize(editing));
+    saveWorkouts();
+    renderCards();
+  }
+
+  function openPad(field){
+    padField = field;
+    padDraft = String(editing[field] ?? 0);
+    $('numpadValue').textContent = padDraft;
+    $('numpad').classList.remove('hidden');
+  }
+
+  const keySet = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
+  $('keys').innerHTML = keySet.map(k => `<button data-key="${k}">${k}</button>`).join('');
+
+  function startWorkout(w){
+    const clean = normalize(w);
+    active = {...clean};
+    phases = build(active);
+    if (!phases.length) return;
+    phaseIndex = 0;
+    remainingMs = phases[0].duration * 1000;
+    deadline = Date.now() + remainingMs;
+    running = true;
+    show('timer');
+    renderTimer();
+    updatePauseIcon();
+    startTicker();
+    haptic([24,30,48]);
+    beep(980,.10);
+  }
+
+  function startTicker(){
+    clearInterval(tickId);
+    tickId = setInterval(() => {
+      if (!running || !active) return;
+      remainingMs = Math.max(0, deadline - Date.now());
+      if (remainingMs <= 0) advance(1, true);
+      else {
+        const sec = Math.ceil(remainingMs/1000);
+        if (sec <= 3 && sec >= 1 && Math.abs(remainingMs - sec*1000) < 280) {
+          haptic(sec===1?[40,25,70]:18);
+          beep(1200,.07);
+        }
+        renderTimer(false);
+      }
+    }, 200);
+  }
+
+  function advance(delta, auto=false){
+    if (!phases.length) return;
+    const next = phaseIndex + delta;
+    if (next < 0) {
+      phaseIndex = 0;
+    } else if (next >= phases.length) {
+      if (auto) {
+        running = false;
+        remainingMs = 0;
+        renderTimer();
+        updatePauseIcon();
+        beep(820,.28);
+        haptic([60,40,100]);
+        return;
+      }
+      phaseIndex = phases.length - 1;
+    } else {
+      phaseIndex = next;
+    }
+    remainingMs = phases[phaseIndex].duration * 1000;
+    deadline = Date.now() + remainingMs;
+    if (auto) {
+      const p = phases[phaseIndex];
+      beep(p.type==='work'?1080:620,.13);
+      haptic(p.type==='work'?[34,28,65]:24);
+    } else haptic(12);
+    renderTimer();
+  }
+
+  function setPhase(index){
+    if (index < 0 || index >= phases.length) return;
+    phaseIndex = index;
+    remainingMs = phases[index].duration * 1000;
+    deadline = Date.now() + remainingMs;
+    renderTimer();
+    haptic(12);
+  }
+
+  function renderTimer(scroll=true){
+    if (!active || !phases.length) return;
+    const p = phases[phaseIndex];
+    const chrome = p.type==='prep' ? '#10361a' : p.type==='work' ? '#260b13' : '#0b1631';
+    document.documentElement.style.setProperty('--chrome', chrome);
+    $('phaseBg').className = 'phase-bg ' + p.type;
+    $('themeColor').setAttribute('content', chrome);
+
+    const all = phases.reduce((s,x)=>s+x.duration,0);
+    const before = phases.slice(0,phaseIndex).reduce((s,x)=>s+x.duration,0);
+    const currentElapsed = Math.max(0, p.duration - remainingMs/1000);
+    const elapsed = before + currentElapsed;
+    const remain = Math.max(0, all - elapsed);
+
+    $('timerSub').textContent = 'Подход ' + p.set + '/' + active.sets + ' · Цикл ' + Math.max(1,p.cycle) + '/' + active.cycles;
+    $('phaseTitle').textContent = p.label;
+    $('timerNumber').textContent = Math.max(0, Math.ceil(remainingMs/1000));
+    $('timerTotal').textContent = '/ ' + p.duration + ' сек';
+    $('remainTotal').textContent = fmt(remain);
+    $('allTotal').textContent = fmt(all);
+    $('progressBar').style.width = (all ? Math.min(100, elapsed/all*100) : 0) + '%';
+    $('intervalCounter').textContent = (phaseIndex+1) + '/' + phases.length;
+
+    $('intervals').innerHTML = phases.map((x,i) => `
+      <button class="int-row ${i===phaseIndex?'current':''}" data-index="${i}">
+        <span class="int-index">${i+1}</span>
+        <b class="int-label">${escapeHtml(x.label)}</b>
+        <span class="int-duration">${x.duration} сек</span>
+      </button>
+    `).join('');
+
+    if (scroll) setTimeout(() => document.querySelector('.int-row.current')?.scrollIntoView({block:'center',behavior:'smooth'}), 0);
+  }
+
+  function updatePauseIcon(){
+    $('pauseBtn').innerHTML = running
+      ? '<svg class="ui-icon timer-control-icon" viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg>'
+      : '<svg class="ui-icon timer-control-icon" viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5-10-6.5Z"/></svg>';
+  }
+
+  $('cards').addEventListener('click', e => {
+    const edit = e.target.closest('.edit-btn');
+    const play = e.target.closest('.play-btn');
+    if (edit) { openEditor(edit.dataset.id); haptic(10); }
+    if (play) {
+      const w = workouts.find(x => x.id === play.dataset.id);
+      if (w) startWorkout(w);
+    }
+  });
+
+  $('addBtn').addEventListener('click', () => { openEditor(null); haptic(10); });
+  $('settingsBtn').addEventListener('click', () => $('settings').classList.toggle('hidden'));
+
+  $('editorList').addEventListener('click', e => {
+    const adj = e.target.closest('.adjust-btn');
+    const pad = e.target.closest('.pad-btn');
+    if (adj) {
+      const k = adj.dataset.field;
+      const min = Number(adj.dataset.min);
+      editing[k] = Math.max(min, Number(editing[k]) + Number(adj.dataset.delta));
+      renderEditor();
+      haptic(8);
+    }
+    if (pad) openPad(pad.dataset.field);
+  });
+
+  $('keys').addEventListener('click', e => {
+    const k = e.target.dataset.key;
+    if (!k) return;
+    haptic(8);
+    if (k === '⌫') padDraft = padDraft.slice(0,-1);
+    else if (k === '✓') {
+      const meta = fields.find(x => x[0] === padField);
+      const min = meta ? meta[3] : 0;
+      editing[padField] = Math.max(min, Number(padDraft || 0));
+      $('numpad').classList.add('hidden');
+      renderEditor();
+      return;
+    } else padDraft = (padDraft === '0' ? k : padDraft + k).slice(0,5);
+    $('numpadValue').textContent = padDraft || '0';
+  });
+
+  $('numpad').addEventListener('click', e => {
+    if (e.target === $('numpad')) $('numpad').classList.add('hidden');
+  });
+
+  $('editorBack').addEventListener('click', () => show('screen'));
+  $('saveBtn').addEventListener('click', () => { commitEditor(); show('screen'); haptic(12); });
+  $('editorStart').addEventListener('click', () => { commitEditor(); startWorkout(editing); });
+  $('deleteBtn').addEventListener('click', () => {
+    if (!editing) return;
+    if (confirm('Удалить тренировку?')) {
+      workouts = workouts.filter(w => w.id !== editing.id);
+      saveWorkouts();
+      renderCards();
+      show('screen');
+    }
+  });
+
+  $('pauseBtn').addEventListener('click', () => {
+    if (!active) return;
+    if (running) {
+      remainingMs = Math.max(0, deadline - Date.now());
+      running = false;
+    } else {
+      deadline = Date.now() + Math.max(0,remainingMs);
+      running = true;
+    }
+    updatePauseIcon();
+    haptic(12);
+  });
+
+  $('prevBtn').addEventListener('click', () => advance(-1,false));
+  $('nextBtn').addEventListener('click', () => advance(1,false));
+  $('intervals').addEventListener('click', e => {
+    const row = e.target.closest('.int-row');
+    if (row) setPhase(Number(row.dataset.index));
+  });
+
+  $('exitBtn').addEventListener('click', () => {
+    if (running) {
+      remainingMs = Math.max(0, deadline - Date.now());
+      running = false;
+      updatePauseIcon();
+    }
+    $('exitModal').classList.remove('hidden');
+  });
+
+  $('continueBtn').addEventListener('click', () => {
+    $('exitModal').classList.add('hidden');
+    if (active && remainingMs > 0) {
+      deadline = Date.now() + remainingMs;
+      running = true;
+      updatePauseIcon();
+    }
+  });
+
+  $('confirmExitBtn').addEventListener('click', () => {
+    $('exitModal').classList.add('hidden');
+    running = false;
+    active = null;
+    phases = [];
+    clearInterval(tickId);
+    document.documentElement.style.setProperty('--chrome','#050505');
+    $('themeColor').setAttribute('content','#000000');
+    show('screen');
+    renderCards();
+  });
+
+  $('soundToggle').checked = sound;
+  $('vibrateToggle').checked = vibrate;
+  $('soundToggle').addEventListener('change', e => {
+    sound = e.target.checked;
+    savePrefs();
+    if (sound) beep(920,.08);
+  });
+  $('vibrateToggle').addEventListener('change', e => {
+    vibrate = e.target.checked;
+    savePrefs();
+    if (vibrate) haptic(18);
+  });
+
+  ['gesturestart','gesturechange'].forEach(type => document.addEventListener(type,e=>e.preventDefault(),{passive:false}));
+  document.addEventListener('touchmove',e=>{if(e.touches && e.touches.length>1)e.preventDefault()},{passive:false});
+  document.addEventListener('dblclick',e=>e.preventDefault(),{passive:false});
+  document.addEventListener('contextmenu',e=>e.preventDefault());
+  document.addEventListener('selectstart',e=>e.preventDefault());
+
+  renderCards();
+
+  const splashStart = performance.now();
+  const waitLoad = document.readyState === 'complete'
+    ? Promise.resolve()
+    : new Promise(r => window.addEventListener('load',r,{once:true}));
+  const waitFonts = document.fonts && document.fonts.ready ? document.fonts.ready.catch(()=>{}) : Promise.resolve();
+  Promise.race([Promise.all([waitLoad,waitFonts]), new Promise(r=>setTimeout(r,1500))]).then(() => {
+    const delay = Math.max(0, 650 - (performance.now()-splashStart));
+    setTimeout(() => {
+      $('splash').classList.add('hide');
+      setTimeout(() => $('splash').classList.add('hidden'), 430);
+    }, delay);
+  });
+})();
+</script>
+</body>
+</html>
