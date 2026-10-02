@@ -195,79 +195,86 @@ h1{font-size:36px;margin:6px 0 0}
 .card.exact-art{transition:transform .12s ease}
 
 
-/* HQ live card layer: generated equipment image stays as the photo,
-   all text/icons/buttons are rendered natively at device resolution. */
+/* HQ workout cards: clean photo + live UI, no baked controls/text. */
 .card.exact-art{
-  --accent-rgb:166,170,178;
-  --accent:#a6aab2;
-  border:1px solid rgba(var(--accent-rgb),.42);
-  background:#070809;
-  background-image:none!important;
+  position:relative;
+  width:100%;
+  aspect-ratio:3.05/1;
+  min-height:0;
+  margin-bottom:14px;
+  padding:0;
+  overflow:hidden;
+  isolation:isolate;
+  border-radius:24px;
+  --accent-rgb:160,164,174;
+  --accent:#a0a4ae;
+  background:#060708;
+  border:1px solid rgba(var(--accent-rgb),.44);
   box-shadow:
-    inset 0 1px 0 rgba(255,255,255,.10),
-    inset 0 0 0 1px rgba(var(--accent-rgb),.08),
-    0 10px 26px rgba(0,0,0,.24);
+    inset 0 1px 0 rgba(255,255,255,.08),
+    inset 0 0 0 1px rgba(var(--accent-rgb),.06),
+    0 14px 32px rgba(0,0,0,.26);
 }
-.card.exact-art[data-theme="graphite"]{--accent-rgb:155,160,170;--accent:#a6aab4}
-.card.exact-art[data-theme="berry"]{--accent-rgb:239,74,126;--accent:#ef4a7e}
-.card.exact-art[data-theme="orange"]{--accent-rgb:244,119,54;--accent:#f47736}
-.card.exact-art[data-theme="blue"]{--accent-rgb:73,127,229;--accent:#497fe5}
-.card.exact-art[data-theme="green"]{--accent-rgb:75,170,119;--accent:#4baa77}
-.card.exact-art[data-theme="violet"]{--accent-rgb:143,92,218;--accent:#8f5cda}
+.card.exact-art[data-theme="graphite"]{--accent-rgb:165,169,179;--accent:#a5a9b3}
+.card.exact-art[data-theme="berry"]{--accent-rgb:244,79,130;--accent:#f44f82}
+.card.exact-art[data-theme="orange"]{--accent-rgb:247,125,62;--accent:#f77d3e}
+.card.exact-art[data-theme="blue"]{--accent-rgb:81,143,239;--accent:#518fef}
+.card.exact-art[data-theme="green"]{--accent-rgb:76,178,125;--accent:#4cb27d}
+.card.exact-art[data-theme="violet"]{--accent-rgb:148,98,225;--accent:#9462e1}
 
-.card.exact-art:before{
-  display:block!important;
-  content:"";
+.card-photo{
   position:absolute;
-  z-index:1;
-  top:0;
-  right:0;
-  bottom:0;
-  width:61%;
-  pointer-events:none;
-  background-image:var(--card-sprite);
-  background-repeat:no-repeat;
-  background-size:181% auto;
-  background-position:right var(--art-y,0%);
-  filter:contrast(1.08) saturate(1.12) brightness(.82);
-  opacity:.98;
+  inset:0;
+  z-index:0;
+  background-image:var(--photo);
+  background-size:cover;
+  background-position:center;
+  transform:scale(1.01);
+  filter:grayscale(.22) contrast(1.12) brightness(.76) saturate(.86);
 }
-.card.exact-art:after{
-  display:block!important;
+.card-photo:after{
   content:"";
   position:absolute;
   inset:0;
-  z-index:2;
-  pointer-events:none;
-  border-radius:inherit;
   background:
     linear-gradient(90deg,
       rgba(5,6,8,.995) 0%,
-      rgba(5,6,8,.985) 36%,
-      rgba(5,6,8,.88) 50%,
-      rgba(5,6,8,.46) 64%,
-      rgba(5,6,8,.12) 100%),
+      rgba(5,6,8,.975) 28%,
+      rgba(5,6,8,.86) 44%,
+      rgba(5,6,8,.48) 62%,
+      rgba(5,6,8,.16) 100%),
     linear-gradient(135deg,
-      rgba(var(--accent-rgb),.12) 0%,
-      rgba(var(--accent-rgb),.035) 44%,
-      transparent 68%);
-  box-shadow:
-    inset 0 0 0 1px rgba(var(--accent-rgb),.22),
-    inset 0 0 34px rgba(var(--accent-rgb),.05);
+      rgba(var(--accent-rgb),.25) 0%,
+      rgba(var(--accent-rgb),.10) 42%,
+      rgba(var(--accent-rgb),.04) 72%,
+      transparent 100%);
 }
+.card.exact-art:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:1;
+  pointer-events:none;
+  border-radius:inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(var(--accent-rgb),.18),
+    inset 0 0 54px rgba(var(--accent-rgb),.045);
+}
+.card.exact-art:after{display:none!important}
+
 .card-live{
   position:absolute;
   inset:0;
-  z-index:3;
+  z-index:2;
   color:#fff;
   pointer-events:none;
 }
 .card-primary{
   position:absolute;
-  inset:0 25% 0 0;
-  border:0;
-  padding:0;
+  inset:0 27% 0 0;
   margin:0;
+  padding:0;
+  border:0;
   background:transparent;
   color:inherit;
   text-align:left;
@@ -277,35 +284,35 @@ h1{font-size:36px;margin:6px 0 0}
 }
 .card-sport-icon{
   position:absolute;
-  left:clamp(14px,3.6vw,27px);
-  top:clamp(12px,3.2vw,24px);
-  width:clamp(20px,5.2vw,34px);
-  height:clamp(20px,5.2vw,34px);
+  left:clamp(16px,4.2vw,29px);
+  top:clamp(14px,3.6vw,24px);
+  width:clamp(21px,5vw,32px);
+  height:clamp(21px,5vw,32px);
   color:rgb(var(--accent-rgb));
-  filter:drop-shadow(0 1px 5px rgba(var(--accent-rgb),.18));
+  filter:drop-shadow(0 1px 7px rgba(var(--accent-rgb),.22));
 }
 .card-sport-icon svg{display:block;width:100%;height:100%;stroke:currentColor}
 .card-live-title{
   position:absolute;
-  left:clamp(14px,3.6vw,27px);
-  top:clamp(42px,11vw,70px);
-  max-width:92%;
+  left:clamp(16px,4.2vw,29px);
+  top:clamp(46px,11vw,72px);
+  max-width:94%;
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
-  font-family:Impact,Haettenschweiler,'Arial Narrow Bold',system-ui,sans-serif;
-  font-size:clamp(16px,4.55vw,25px);
-  line-height:.94;
-  letter-spacing:.012em;
-  font-weight:900;
+  font-family:'Russo One',Impact,Haettenschweiler,'Arial Narrow Bold',system-ui,sans-serif;
+  font-size:clamp(18px,4.9vw,28px);
+  line-height:1;
+  letter-spacing:.006em;
+  font-weight:800;
   text-transform:uppercase;
-  text-shadow:0 2px 9px rgba(0,0,0,.55);
+  text-shadow:0 2px 10px rgba(0,0,0,.65);
 }
 .card-live-stats{
   position:absolute;
-  left:clamp(14px,3.6vw,27px);
+  left:clamp(16px,4.2vw,29px);
   right:0;
-  bottom:clamp(10px,2.8vw,21px);
+  bottom:clamp(12px,3vw,20px);
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
   align-items:end;
@@ -313,28 +320,26 @@ h1{font-size:36px;margin:6px 0 0}
 .card-live-stat{
   position:relative;
   min-width:0;
-  padding-right:clamp(4px,1.6vw,12px);
+  padding-right:clamp(4px,1.4vw,10px);
 }
-.card-live-stat:not(:first-child){
-  padding-left:clamp(5px,1.7vw,13px);
-}
+.card-live-stat:not(:first-child){padding-left:clamp(6px,1.8vw,13px)}
 .card-live-stat:not(:first-child):before{
   content:"";
   position:absolute;
   left:0;
-  top:12%;
-  bottom:4%;
+  top:10%;
+  bottom:2%;
   width:1px;
   background:rgba(255,255,255,.16);
 }
 .card-live-stat b{
   display:block;
-  font-size:clamp(14px,4.25vw,23px);
+  font-size:clamp(15px,4.1vw,23px);
   line-height:1;
   font-weight:760;
   letter-spacing:-.02em;
   color:#fff;
-  text-shadow:0 1px 6px rgba(0,0,0,.45);
+  text-shadow:0 1px 7px rgba(0,0,0,.55);
 }
 .card-live-stat span{
   display:block;
@@ -342,56 +347,46 @@ h1{font-size:36px;margin:6px 0 0}
   overflow:hidden;
   text-overflow:ellipsis;
   white-space:nowrap;
-  font-size:clamp(8px,2.3vw,12px);
+  font-size:clamp(8px,2.18vw,12px);
   line-height:1;
-  color:rgba(255,255,255,.58);
+  color:rgba(255,255,255,.60);
 }
 .card-live-actions{
   position:absolute;
-  right:clamp(10px,2.7vw,20px);
-  top:clamp(10px,2.7vw,20px);
+  right:clamp(10px,2.8vw,18px);
+  top:clamp(10px,2.8vw,18px);
   display:flex;
-  gap:clamp(7px,1.8vw,12px);
+  gap:clamp(8px,2vw,12px);
   pointer-events:auto;
 }
 .card-live-action{
-  width:clamp(38px,10.2vw,60px);
-  height:clamp(38px,10.2vw,60px);
+  width:clamp(41px,10.8vw,62px);
+  height:clamp(41px,10.8vw,62px);
   border-radius:50%;
   padding:0;
-  border:1px solid rgba(255,255,255,.24);
-  background:rgba(5,6,8,.58);
+  border:1px solid rgba(255,255,255,.28);
+  background:rgba(8,9,11,.70);
   color:#fff;
   display:grid;
   place-items:center;
-  backdrop-filter:blur(14px) saturate(120%);
-  -webkit-backdrop-filter:blur(14px) saturate(120%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.08);
+  backdrop-filter:blur(18px) saturate(112%);
+  -webkit-backdrop-filter:blur(18px) saturate(112%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 5px 16px rgba(0,0,0,.18);
 }
 .card-live-action:active{transform:scale(.94)}
-.card-live-action svg{width:43%;height:43%}
-.card-live-action.menu svg{width:47%;height:47%}
-.card.exact-art:active{transform:scale(.994)}
+.card-live-action svg{width:42%;height:42%}
+.card-live-action.menu svg{width:46%;height:46%}
+.card.exact-art:active{transform:scale(.995)}
 .card-hit{display:none!important}
 @media (max-width:360px){
-  .card-live-stat span{font-size:7.5px}
+  .card-live-title{font-size:17px}
+  .card-live-stat span{font-size:7.4px}
 }
 
-/* 3-second visual approach cue */
-.phase-bg.timer-beat{
-  transform-origin:center;
-  animation:timerBeat var(--beat-dur,.22s) cubic-bezier(.2,.75,.22,1) 1;
-}
-.phase-bg.timer-beat.beat-soft{--beat-scale:1.014;--beat-bright:1.13;--beat-sat:1.08;--beat-dur:.18s}
-.phase-bg.timer-beat.beat-medium{--beat-scale:1.023;--beat-bright:1.23;--beat-sat:1.14;--beat-dur:.22s}
-.phase-bg.timer-beat.beat-strong{--beat-scale:1.034;--beat-bright:1.36;--beat-sat:1.20;--beat-dur:.28s}
-@keyframes timerBeat{
-  0%{transform:scale(1);filter:brightness(1) saturate(1)}
-  34%{transform:scale(var(--beat-scale,1.02));filter:brightness(var(--beat-bright,1.2)) saturate(var(--beat-sat,1.12))}
-  100%{transform:scale(1);filter:brightness(1) saturate(1)}
-}
-
-
+/* Timer background pulses disabled. */
+.phase-bg.timer-beat{animation:none!important;transform:none!important;filter:none!important}
 
 /* Editor */
 .editor{
@@ -426,7 +421,7 @@ h1{font-size:36px;margin:6px 0 0}
 .phase-bg:before{width:118%;height:60%;left:-9%;top:10%;background:radial-gradient(circle at 50% 50%,rgba(255,255,255,.38) 0 4%,var(--a) 23%,var(--b) 55%,transparent 76%)}
 .phase-bg:after{width:96%;height:46%;left:2%;bottom:7%;background:radial-gradient(circle at 50% 50%,var(--c) 0 12%,var(--a) 38%,transparent 72%);animation-duration:5.5s}
 .phase-bg.prep{--a:#aaff1f;--b:#24da50;--c:#d9ff72;--phase:#10361a}
-.phase-bg.work{--a:#ff4329;--b:#6c4cf7;--c:#ffd05e;--phase:#260b13}
+.phase-bg.work{--a:#9befff;--b:#2db8ee;--c:#c8f7ff;--phase:#168fc5}
 .phase-bg.rest{--a:#5575ff;--b:#7352dd;--c:#a8ddff;--phase:#0b1631}
 @keyframes morph{from{transform:translate(-3%,-2%) scale(.94)}to{transform:translate(3%,4%) scale(1.05)}}
 
@@ -822,19 +817,7 @@ h1{font-size:36px;margin:6px 0 0}
     }catch{}
   }
 
-  function pulseTimerBackground(delay=0,intensity='medium'){
-    const fire=()=>{
-      const bg=$('phaseBg');
-      if(!bg||$('timer')?.classList.contains('hidden')) return;
-      bg.classList.remove('timer-beat','beat-soft','beat-medium','beat-strong');
-      void bg.offsetWidth;
-      bg.classList.add('timer-beat','beat-'+intensity);
-      const clear=()=>bg.classList.remove('timer-beat','beat-soft','beat-medium','beat-strong');
-      bg.addEventListener('animationend',clear,{once:true});
-    };
-    if(delay>0) setTimeout(fire,Math.round(delay*1000));
-    else fire();
-  }
+  function pulseTimerBackground(){ /* disabled by design */ }
 
   function softTick(step=3){
     const notes={3:293.66,2:329.63,1:369.99};
@@ -1091,6 +1074,14 @@ h1{font-size:36px;margin:6px 0 0}
     $(id).classList.remove('hidden');
   }
 
+  const CARD_PHOTOS={
+    press:'https://images.unsplash.com/photo-1547919307-1ecb10702e6f?auto=format&fit=crop&fm=jpg&q=88&w=1800',
+    training:'https://images.unsplash.com/photo-1734630341082-0fec0e10126c?auto=format&fit=crop&fm=jpg&q=88&w=1800',
+    hiit:'https://images.unsplash.com/photo-1734630341082-0fec0e10126c?auto=format&fit=crop&fm=jpg&q=88&w=1800',
+    cardio:'https://images.unsplash.com/photo-1734630341082-0fec0e10126c?auto=format&fit=crop&fm=jpg&q=88&w=1800',
+    stretch:'https://images.unsplash.com/photo-1547919307-1ecb10702e6f?auto=format&fit=crop&fm=jpg&q=88&w=1800'
+  };
+
   function workoutKind(w){
     const n=String(w?.name||'').toUpperCase();
     if(n.includes('ПРЕСС')) return 'press';
@@ -1098,14 +1089,6 @@ h1{font-size:36px;margin:6px 0 0}
     if(n.includes('КАРДИО')) return 'cardio';
     if(n.includes('РАСТЯЖ')) return 'stretch';
     return 'training';
-  }
-
-  function artIndexForWorkout(w){
-    const kind=workoutKind(w);
-    return ({press:0,training:1,hiit:2,cardio:3,stretch:4})[kind]??1;
-  }
-  function artPosition(index){
-    return ['19.53%','36.94%','54.28%','71.61%','88.95%'][Math.max(0,Math.min(4,index))];
   }
 
   function workoutIconSvg(kind){
@@ -1118,9 +1101,10 @@ h1{font-size:36px;margin:6px 0 0}
   function renderCards(){
     $('cards').innerHTML=workouts.map(w=>{
       const kind=workoutKind(w);
-      const art=artIndexForWorkout(w);
+      const photo=CARD_PHOTOS[kind]||CARD_PHOTOS.training;
       return `
-        <article class="card exact-art" data-theme="${w.color||'graphite'}" style="--art-y:${artPosition(art)}" data-id="${w.id}">
+        <article class="card exact-art" data-theme="${w.color||'graphite'}" data-id="${w.id}">
+          <div class="card-photo" style="--photo:url('${photo}')"></div>
           <div class="card-live">
             <button class="card-primary play-btn" data-id="${w.id}" aria-label="Запустить ${esc(w.name)}">
               <span class="card-sport-icon">${workoutIconSvg(kind)}</span>
@@ -1478,7 +1462,7 @@ h1{font-size:36px;margin:6px 0 0}
   function renderTimer(scroll){
     if(!active||!phases.length) return;
     const p=phases[phaseIndex];
-    const chrome=p.type==='prep'?'#10361a':p.type==='work'?'#260b13':'#0b1631';
+    const chrome=p.type==='prep'?'#10361a':p.type==='work'?'#168fc5':'#0b1631';
     document.documentElement.style.setProperty('--phase',chrome);
     document.documentElement.style.setProperty('--page',chrome);
     $('phaseBg').className='phase-bg '+p.type;
