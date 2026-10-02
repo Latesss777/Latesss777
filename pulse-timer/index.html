@@ -94,6 +94,70 @@ h1{font-size:36px;margin:6px 0 0}
 .card-foot{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.07);font-size:12px;color:#999}
 .fab{position:absolute;right:18px;bottom:calc(env(safe-area-inset-bottom) + 18px);width:62px;height:62px;border-radius:50%;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.08);backdrop-filter:blur(16px);display:grid;place-items:center}
 
+/* Colored frosted workout cards */
+.card{
+  position:relative;overflow:hidden;isolation:isolate;
+  --card-1:rgba(40,40,42,.78);--card-2:rgba(10,10,11,.92);--card-accent:#b9bcc2;
+  background:linear-gradient(135deg,var(--card-1),var(--card-2));
+  border:1px solid rgba(255,255,255,.16);
+  backdrop-filter:blur(20px) saturate(115%);
+  -webkit-backdrop-filter:blur(20px) saturate(115%);
+}
+.card[data-theme="berry"]{--card-1:rgba(112,40,68,.80);--card-2:rgba(24,12,20,.94);--card-accent:#ff9fba}
+.card[data-theme="orange"]{--card-1:rgba(124,66,33,.82);--card-2:rgba(27,16,10,.94);--card-accent:#ffb07c}
+.card[data-theme="blue"]{--card-1:rgba(34,67,115,.82);--card-2:rgba(10,17,32,.95);--card-accent:#92bfff}
+.card[data-theme="green"]{--card-1:rgba(38,83,64,.82);--card-2:rgba(9,24,18,.95);--card-accent:#97d8b2}
+.card[data-theme="violet"]{--card-1:rgba(72,52,108,.82);--card-2:rgba(18,13,31,.95);--card-accent:#c2a6ff}
+.card:before{content:"";position:absolute;inset:-25% 32% -35% -18%;z-index:-1;opacity:.55;background:radial-gradient(circle at 35% 35%,rgba(255,255,255,.13),transparent 45%);filter:blur(16px)}
+.card:after{content:"";position:absolute;width:120px;height:120px;right:72px;top:50%;z-index:-1;transform:translateY(-50%) rotate(-14deg);opacity:.12;border:18px solid var(--card-accent);border-radius:50%}
+.card-top,.card-stats,.card-foot{position:relative;z-index:1}
+.card h3{letter-spacing:.01em}
+.card-stats span{color:rgba(255,255,255,.52)}
+.card-foot{color:rgba(255,255,255,.58)}
+.small-btn{background:rgba(4,4,5,.32);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.share-btn{color:var(--card-accent)}
+
+.color-block{margin-top:12px;border:1px solid rgba(255,255,255,.10);border-radius:20px;background:#0d0d0d;padding:14px}
+.color-block-title{font-size:13px;color:#a8a8a8;margin-bottom:11px}
+.color-picker{display:grid;grid-template-columns:repeat(6,1fr);gap:10px}
+.color-dot{position:relative;aspect-ratio:1;border-radius:50%;border:1px solid rgba(255,255,255,.22);padding:0;background:var(--dot)}
+.color-dot.active{outline:2px solid #fff;outline-offset:3px}
+.color-dot[data-color="graphite"]{--dot:linear-gradient(145deg,#53555a,#111)}
+.color-dot[data-color="berry"]{--dot:linear-gradient(145deg,#b34a70,#32131f)}
+.color-dot[data-color="orange"]{--dot:linear-gradient(145deg,#c87a3e,#351a0c)}
+.color-dot[data-color="blue"]{--dot:linear-gradient(145deg,#5488d7,#0b1a35)}
+.color-dot[data-color="green"]{--dot:linear-gradient(145deg,#4d9875,#0c281d)}
+.color-dot[data-color="violet"]{--dot:linear-gradient(145deg,#8061bb,#211532)}
+
+.share-overlay{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.74);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);overflow:auto;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 18px)}
+.share-sheet{position:relative;min-height:100%;max-width:560px;margin:0 auto;overflow:hidden;border-radius:30px;padding:18px;border:1px solid rgba(119,255,224,.19);background:radial-gradient(circle at 16% 5%,rgba(59,220,214,.28),transparent 30%),radial-gradient(circle at 92% 56%,rgba(49,217,132,.24),transparent 35%),linear-gradient(160deg,rgba(9,27,30,.96),rgba(4,8,10,.98) 64%)}
+.share-sheet:before{content:"";position:absolute;width:240px;height:240px;border-radius:50%;left:-90px;bottom:10%;background:rgba(47,230,192,.14);filter:blur(42px);pointer-events:none}
+.share-head{display:flex;align-items:center;justify-content:space-between;gap:12px;position:relative;z-index:1}
+.share-head .icon-btn{width:48px;height:48px;border-radius:50%}
+.share-head-copy{padding:16px 4px 14px;position:relative;z-index:1}
+.share-head-copy .eyebrow{color:rgba(187,255,245,.58)}
+.share-head-copy h2{font-size:clamp(30px,8vw,44px);line-height:.98;margin:8px 0 0}
+.share-preview{position:relative;z-index:1;border-radius:24px;border:1px solid rgba(255,255,255,.15);padding:16px 16px 15px;background:rgba(4,13,14,.54);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+.share-preview h3{margin:0;font-size:24px}
+.share-preview-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:14px}
+.share-preview-stats span{display:block;font-size:10px;color:rgba(255,255,255,.53)}
+.share-preview-stats b{display:block;font-size:22px;font-weight:500;margin-top:2px}
+.qr-panel{position:relative;z-index:1;margin-top:14px;border:1px solid rgba(93,255,211,.23);border-radius:27px;padding:20px 16px;background:rgba(7,21,22,.56);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);text-align:center}
+.qr-panel h3{font-size:24px;margin:0}
+.qr-sub{margin:4px 0 16px;color:rgba(255,255,255,.62);font-size:14px}
+.qr-frame{width:min(78vw,320px);aspect-ratio:1;margin:0 auto;border-radius:26px;background:#fff;padding:14px;display:grid;place-items:center;overflow:hidden}
+.qr-frame img{width:100%;height:100%;object-fit:contain;display:block}
+.share-url{margin-top:15px;min-height:54px;border-radius:18px;border:1px solid rgba(255,255,255,.14);background:rgba(0,0,0,.22);display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:center;text-align:left;padding:5px 5px 5px 14px}
+.share-url span{font-size:12px;color:rgba(255,255,255,.75);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.share-url button{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.08);display:grid;place-items:center;padding:0}
+.share-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.share-action{min-height:68px;border:1px solid rgba(255,255,255,.14);border-radius:20px;background:rgba(7,21,22,.50);display:flex;align-items:center;justify-content:center;gap:9px;padding:0 12px}
+.share-action .icon{width:22px;height:22px}
+.share-action span{font-size:14px}
+.toast{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom) + 28px);z-index:200;transform:translate(-50%,18px);opacity:0;pointer-events:none;background:rgba(18,18,18,.92);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:10px 14px;font-size:13px;white-space:nowrap;transition:.24s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+
 /* Editor */
 .editor{
   overflow:auto;
@@ -254,6 +318,10 @@ h1{font-size:36px;margin:6px 0 0}
     </div>
 
     <input class="name-input" id="nameInput" maxlength="32" autocomplete="off" spellcheck="false">
+    <div class="color-block">
+      <div class="color-block-title">Цвет карточки</div>
+      <div class="color-picker" id="colorPicker"></div>
+    </div>
     <div class="editor-list" id="editorList"></div>
     <button class="start-btn" id="editorStart">СТАРТ</button>
     <button class="delete-btn" id="deleteBtn">Удалить тренировку</button>
@@ -298,6 +366,32 @@ h1{font-size:36px;margin:6px 0 0}
     </div>
   </section>
 
+  <div class="share-overlay hidden" id="shareOverlay">
+    <div class="share-sheet">
+      <div class="share-head">
+        <button class="icon-btn" id="shareBack" aria-label="Закрыть"><svg class="icon" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button>
+        <div class="eyebrow">PULSE TIMER</div>
+        <div style="width:48px"></div>
+      </div>
+      <div class="share-head-copy"><div class="eyebrow">ПОДЕЛИТЬСЯ</div><h2>ТРЕНИРОВКОЙ</h2></div>
+      <div class="share-preview" id="sharePreview"></div>
+      <div class="qr-panel">
+        <h3>СКАНИРУЙ QR-КОД</h3>
+        <div class="qr-sub">Открой тренировку по ссылке</div>
+        <div class="qr-frame"><img id="shareQr" alt="QR-код тренировки"></div>
+        <div class="share-url">
+          <span id="shareUrlText"></span>
+          <button id="copyShareInline" aria-label="Копировать ссылку"><svg class="icon" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
+        </div>
+        <div class="share-actions">
+          <button class="share-action" id="copyShareBtn"><svg class="icon" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/></svg><span>Копировать</span></button>
+          <button class="share-action" id="nativeShareBtn"><svg class="icon" viewBox="0 0 24 24"><path d="M12 16V3M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg><span>Поделиться</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
   <div class="modal hidden" id="exitModal">
     <div class="modal-card">
       <div class="eyebrow">ТРЕНИРОВКА ИДЁТ</div>
@@ -331,8 +425,8 @@ h1{font-size:36px;margin:6px 0 0}
   const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
   const DEFAULTS = [
-    {id:'press',name:'ПРЕСС',prep:10,work:30,rest:80,cycles:9,sets:1,setRest:150,coolDown:0},
-    {id:'training',name:'ТРЕНИРОВКА',prep:30,work:30,rest:150,cycles:12,sets:3,setRest:180,coolDown:0}
+    {id:'press',name:'ПРЕСС',prep:10,work:30,rest:80,cycles:9,sets:1,setRest:150,coolDown:0,color:'berry'},
+    {id:'training',name:'ТРЕНИРОВКА',prep:30,work:30,rest:150,cycles:12,sets:3,setRest:180,coolDown:0,color:'blue'}
   ];
 
   // Fresh state: deliberately does not import previously broken localStorage.
@@ -348,7 +442,8 @@ h1{font-size:36px;margin:6px 0 0}
     cycles:Math.max(1,Number(w?.cycles ?? 8) || 8),
     sets:Math.max(1,Number(w?.sets ?? 1) || 1),
     setRest:Math.max(0,Number(w?.setRest ?? 120) || 0),
-    coolDown:Math.max(0,Number(w?.coolDown ?? 0) || 0)
+    coolDown:Math.max(0,Number(w?.coolDown ?? 0) || 0),
+    color:['graphite','berry','orange','blue','green','violet'].includes(w?.color)?w.color:'graphite'
   });
 
   function loadWorkouts(){
@@ -380,6 +475,14 @@ h1{font-size:36px;margin:6px 0 0}
   let padField = null;
   let padDraft = '0';
   let audioCtx = null;
+  let shareWorkout = null;
+  let currentShareUrl = '';
+  let toastTimer = null;
+
+  const COLOR_OPTIONS = [
+    ['graphite','Графит'],['berry','Ягодный'],['orange','Оранжевый'],
+    ['blue','Синий'],['green','Зелёный'],['violet','Фиолетовый']
+  ];
 
   const fieldMeta = [
     ['prep','Подготовка','сек',0,5],
@@ -649,12 +752,15 @@ h1{font-size:36px;margin:6px 0 0}
 
   function renderCards(){
     $('cards').innerHTML=workouts.map(w=>`
-      <article class="card">
+      <article class="card" data-theme="${w.color||'graphite'}">
         <div class="card-top">
           <h3>${esc(w.name)}</h3>
           <div class="card-actions">
             <button class="small-btn edit-btn" data-id="${w.id}" aria-label="Изменить">
               <svg class="icon" viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg>
+            </button>
+            <button class="small-btn share-btn" data-id="${w.id}" aria-label="Поделиться">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M12 16V3M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg>
             </button>
             <button class="small-btn play-btn" data-id="${w.id}" aria-label="Запустить">
               <svg class="icon" viewBox="0 0 24 24"><path d="M8 5.5v13l10-6.5-10-6.5Z"/></svg>
@@ -674,7 +780,7 @@ h1{font-size:36px;margin:6px 0 0}
 
   function openEditor(id){
     const existing=id?workouts.find(w=>w.id===id):null;
-    editing=existing?{...existing}:{id:uid(),name:'НОВАЯ ТРЕНИРОВКА',prep:10,work:30,rest:60,cycles:8,sets:1,setRest:120,coolDown:0};
+    editing=existing?{...existing}:{id:uid(),name:'НОВАЯ ТРЕНИРОВКА',prep:10,work:30,rest:60,cycles:8,sets:1,setRest:120,coolDown:0,color:'graphite'};
     $('nameInput').value=editing.name;
     $('deleteBtn').classList.toggle('hidden',!existing);
     renderEditor();
@@ -692,6 +798,124 @@ h1{font-size:36px;margin:6px 0 0}
         </div>
       </div>
     `).join('');
+    $('colorPicker').innerHTML=COLOR_OPTIONS.map(([key,label])=>`
+      <button class="color-dot ${editing.color===key?'active':''}" data-color="${key}" aria-label="${label}" title="${label}"></button>
+    `).join('');
+  }
+
+  function showToast(message){
+    const el=$('toast');
+    clearTimeout(toastTimer);
+    el.textContent=message;
+    el.classList.add('show');
+    toastTimer=setTimeout(()=>el.classList.remove('show'),1800);
+  }
+
+  function base64UrlEncode(text){
+    const bytes=new TextEncoder().encode(text);
+    let binary='';
+    bytes.forEach(b=>binary+=String.fromCharCode(b));
+    return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  }
+
+  function base64UrlDecode(token){
+    let b64=String(token||'').replace(/-/g,'+').replace(/_/g,'/');
+    while(b64.length%4)b64+='=';
+    const binary=atob(b64);
+    const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  }
+
+  function encodeWorkout(w){
+    const n=normalize(w);
+    return base64UrlEncode(JSON.stringify({
+      v:1,name:n.name,prep:n.prep,work:n.work,rest:n.rest,cycles:n.cycles,
+      sets:n.sets,setRest:n.setRest,coolDown:n.coolDown,color:n.color
+    }));
+  }
+
+  function decodeWorkout(token){
+    const data=JSON.parse(base64UrlDecode(token));
+    if(!data||data.v!==1) throw new Error('Unsupported workout');
+    return normalize({...data,id:uid()});
+  }
+
+  function workoutSignature(w){
+    return [w.name,w.prep,w.work,w.rest,w.cycles,w.sets,w.setRest,w.coolDown,w.color].join('|');
+  }
+
+  function workoutShareUrl(w){
+    const u=new URL('https://pulse-timer-matvey-v2.onrender.com/');
+    u.searchParams.set('v','1215');
+    u.searchParams.set('workout',encodeWorkout(w));
+    return u.toString();
+  }
+
+  function closeShare(){
+    $('shareOverlay').classList.add('hidden');
+    shareWorkout=null;
+  }
+
+  function openShare(w){
+    shareWorkout=normalize(w);
+    currentShareUrl=workoutShareUrl(shareWorkout);
+    $('sharePreview').innerHTML=`
+      <h3>${esc(shareWorkout.name)}</h3>
+      <div class="share-preview-stats">
+        <div><span>Работа</span><b>${shareWorkout.work}</b></div>
+        <div><span>Отдых</span><b>${shareWorkout.rest}</b></div>
+        <div><span>Циклы</span><b>${shareWorkout.cycles}</b></div>
+        <div><span>Подходы</span><b>${shareWorkout.sets}</b></div>
+      </div>`;
+    $('shareUrlText').textContent=currentShareUrl;
+    $('shareQr').src='https://quickchart.io/qr?size=420&margin=1&ecLevel=M&dark=000000&light=ffffff&text='+encodeURIComponent(currentShareUrl);
+    $('shareOverlay').classList.remove('hidden');
+    haptic(12);
+  }
+
+  async function copyShare(){
+    if(!currentShareUrl)return;
+    try{await navigator.clipboard.writeText(currentShareUrl)}
+    catch{
+      const ta=document.createElement('textarea');
+      ta.value=currentShareUrl;ta.style.position='fixed';ta.style.opacity='0';
+      document.body.appendChild(ta);ta.select();
+      try{document.execCommand('copy')}catch{}
+      ta.remove();
+    }
+    showToast('Ссылка скопирована');
+    haptic(10);
+  }
+
+  async function nativeShare(){
+    if(!shareWorkout||!currentShareUrl)return;
+    if(navigator.share){
+      try{
+        await navigator.share({title:'Pulse Timer — '+shareWorkout.name,text:'Тренировка '+shareWorkout.name+' в Pulse Timer',url:currentShareUrl});
+        return;
+      }catch(err){if(err?.name==='AbortError')return}
+    }
+    await copyShare();
+  }
+
+  function importSharedWorkout(){
+    const u=new URL(location.href);
+    const token=u.searchParams.get('workout');
+    if(!token)return;
+    try{
+      const imported=decodeWorkout(token);
+      const sig=workoutSignature(imported);
+      const exists=workouts.some(w=>workoutSignature(w)===sig);
+      if(!exists){
+        workouts.unshift(imported);
+        saveWorkouts();
+        setTimeout(()=>showToast('Тренировка добавлена'),900);
+      }else setTimeout(()=>showToast('Тренировка уже сохранена'),900);
+    }catch{
+      setTimeout(()=>showToast('Не удалось открыть тренировку'),900);
+    }
+    u.searchParams.delete('workout');
+    try{history.replaceState({},'',u.pathname+(u.search||'')+u.hash)}catch{}
   }
 
   function commitEditor(){
@@ -861,13 +1085,29 @@ h1{font-size:36px;margin:6px 0 0}
 
   $('cards').addEventListener('click',e=>{
     const edit=e.target.closest('.edit-btn');
+    const share=e.target.closest('.share-btn');
     const play=e.target.closest('.play-btn');
     if(edit){openEditor(edit.dataset.id);haptic(10)}
+    if(share){const w=workouts.find(x=>x.id===share.dataset.id);if(w)openShare(w)}
     if(play){const w=workouts.find(x=>x.id===play.dataset.id);if(w)startWorkout(w)}
   });
 
   $('addBtn').addEventListener('click',()=>{openEditor(null);haptic(10)});
   $('settingsBtn').addEventListener('click',()=>$('settings').classList.toggle('hidden'));
+
+  $('colorPicker').addEventListener('click',e=>{
+    const btn=e.target.closest('.color-dot');
+    if(!btn||!editing)return;
+    editing.color=btn.dataset.color;
+    renderEditor();
+    haptic(8);
+  });
+
+  $('shareBack').addEventListener('click',closeShare);
+  $('shareOverlay').addEventListener('click',e=>{if(e.target===$('shareOverlay'))closeShare()});
+  $('copyShareInline').addEventListener('click',copyShare);
+  $('copyShareBtn').addEventListener('click',copyShare);
+  $('nativeShareBtn').addEventListener('click',nativeShare);
 
   $('editorList').addEventListener('click',e=>{
     const adj=e.target.closest('.adjust-btn');
@@ -983,6 +1223,7 @@ h1{font-size:36px;margin:6px 0 0}
   window.addEventListener('orientationchange',()=>setTimeout(syncViewportHeight,120));
   window.visualViewport?.addEventListener('resize',syncViewportHeight);
 
+  importSharedWorkout();
   renderCards();
 
   const started=performance.now();
