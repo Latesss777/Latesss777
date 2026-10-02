@@ -406,12 +406,24 @@ h1{font-size:36px;margin:6px 0 0}
   function makeSignalWav(kind){
     const sampleRate=44100;
     const spec=kind==='workStart'
-      ? [{f1:1050,f2:1900,d:.17,g:.96},{f1:1350,f2:2350,d:.19,g:1}]
+      ? [
+          {f1:1250,f2:1680,d:.11,g:.92},
+          {f1:1500,f2:2050,d:.13,g:.96}
+        ]
       : kind==='workEnd'
-      ? [{f1:2150,f2:1050,d:.19,g:1},{f1:1650,f2:760,d:.23,g:.94}]
+      ? [
+          {f1:1850,f2:1320,d:.12,g:.92},
+          {f1:1450,f2:980,d:.15,g:.88}
+        ]
       : kind==='finish'
-      ? [{f1:1150,f2:1750,d:.16,g:.94},{f1:1450,f2:2100,d:.18,g:.98},{f1:1750,f2:2500,d:.23,g:1}]
-      : [{f1:900,f2:1350,d:.13,g:.9}];
+      ? [
+          {f1:1200,f2:1650,d:.11,g:.88},
+          {f1:1450,f2:1950,d:.12,g:.92},
+          {f1:1700,f2:2250,d:.15,g:.96}
+        ]
+      : kind==='preStart'
+      ? [{f1:980,f2:1180,d:.085,g:.72}]
+      : [{f1:900,f2:1180,d:.10,g:.74}];
 
     const gap=.055;
     const total=spec.reduce((s,x)=>s+x.d,0)+gap*(spec.length-1);
@@ -437,7 +449,7 @@ h1{font-size:36px;margin:6px 0 0}
         const attack=Math.min(1,i/(sampleRate*.006));
         const release=Math.min(1,(n-i)/(sampleRate*.028));
         const env=Math.min(attack,release);
-        const harmonic=.72*Math.sin(phase)+.22*Math.sin(phase*2)+.06*Math.sin(phase*3);
+        const harmonic=.86*Math.sin(phase)+.11*Math.sin(phase*2)+.03*Math.sin(phase*3);
         const sample=Math.max(-1,Math.min(1,harmonic*env*s.g));
         view.setInt16(44+(cursor+i)*2,Math.round(sample*32767),true);
       }
@@ -449,7 +461,7 @@ h1{font-size:36px;margin:6px 0 0}
 
   function initSignalPlayers(){
     if(Object.keys(signalPlayers).length) return;
-    for(const kind of ['ready','workStart','workEnd','finish']){
+    for(const kind of ['ready','preStart','workStart','workEnd','finish']){
       const a=new Audio(makeSignalWav(kind));
       a.preload='auto';
       a.volume=1;
@@ -524,17 +536,19 @@ h1{font-size:36px;margin:6px 0 0}
       if(p?.catch){
         await p.catch(()=>{
           if(kind==='workStart'){
-            tone({from:1120,to:1950,dur:.17,gain:.54});
-            tone({from:1420,to:2350,dur:.19,delay:.19,gain:.58});
+            tone({from:1250,to:1680,dur:.11,gain:.48,type:'sine'});
+            tone({from:1500,to:2050,dur:.13,delay:.14,gain:.52,type:'sine'});
           }else if(kind==='workEnd'){
-            tone({from:2150,to:1050,dur:.19,gain:.57});
-            tone({from:1650,to:760,dur:.23,delay:.22,gain:.54});
+            tone({from:1850,to:1320,dur:.12,gain:.48,type:'sine'});
+            tone({from:1450,to:980,dur:.15,delay:.15,gain:.46,type:'sine'});
           }else if(kind==='finish'){
-            tone({from:1180,to:1780,dur:.16,gain:.55});
-            tone({from:1480,to:2150,dur:.18,delay:.19,gain:.58});
-            tone({from:1780,to:2500,dur:.23,delay:.41,gain:.6});
+            tone({from:1200,to:1650,dur:.11,gain:.46,type:'sine'});
+            tone({from:1450,to:1950,dur:.12,delay:.14,gain:.49,type:'sine'});
+            tone({from:1700,to:2250,dur:.15,delay:.30,gain:.52,type:'sine'});
+          }else if(kind==='preStart'){
+            tone({from:980,to:1180,dur:.085,gain:.38,type:'sine'});
           }else{
-            tone({from:900,to:1350,dur:.13,gain:.5});
+            tone({from:900,to:1180,dur:.10,gain:.40,type:'sine'});
           }
         });
       }
@@ -547,6 +561,7 @@ h1{font-size:36px;margin:6px 0 0}
     tap:[18],
     toggle:[30],
     workoutStart:[55,35,95],
+    preWork3:[125,48,165],
     workStart:[90,45,135],
     workEnd:[130,55,90],
     countdown3:[28],
@@ -580,7 +595,7 @@ h1{font-size:36px;margin:6px 0 0}
     try{
       const cap=window.Capacitor?.Plugins?.Haptics;
       if(cap){
-        const strong=['workStart','workEnd','finish','countdown1','workoutStart'].includes(kind);
+        const strong=['workStart','workEnd','finish','countdown1','workoutStart','preWork3'].includes(kind);
         if(cap.impact){
           await cap.impact({style:strong?'HEAVY':'MEDIUM'});
           fired=true;
@@ -731,8 +746,16 @@ h1{font-size:36px;margin:6px 0 0}
       const sec=Math.ceil(remainingMs/1000);
       if(sec<=3&&sec>=1&&sec!==lastCountdownSec){
         lastCountdownSec=sec;
-        haptic(sec===3?'countdown3':sec===2?'countdown2':'countdown1');
-        beep(sec===1?1380:1180,.075);
+        const next=phases[phaseIndex+1];
+        const workStartsNext=!!next && next.type==='work';
+
+        if(sec===3 && workStartsNext){
+          haptic('preWork3');
+          playSignal('preStart');
+        }else{
+          haptic(sec===3?'countdown3':sec===2?'countdown2':'countdown1');
+          beep(sec===1?1320:1080,.065);
+        }
       }
       renderTimer(false);
     },200);
