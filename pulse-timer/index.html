@@ -27,6 +27,16 @@ body{touch-action:manipulation}
 button,input{font:inherit;color:inherit}
 button{border:0}
 .hidden{display:none!important}
+#hapticSwitch{
+  position:fixed;
+  left:-20px;
+  top:-20px;
+  width:2px;
+  height:2px;
+  opacity:.001;
+  pointer-events:none;
+  z-index:-1;
+}
 #app{position:fixed;top:0;left:0;width:100%;height:var(--app-h);min-height:var(--app-h);background:var(--page);overflow:hidden}
 
 /* Splash — only on first page load */
@@ -196,7 +206,7 @@ h1{font-size:36px;margin:6px 0 0}
 </style>
 </head>
 <body>
-<div id="app">
+<div id="app"><input id="hapticSwitch" type="checkbox" switch aria-hidden="true" tabindex="-1">
 
   <div class="splash" id="splash">
     <div class="splash-ring"></div>
@@ -221,11 +231,11 @@ h1{font-size:36px;margin:6px 0 0}
     <div class="settings hidden" id="settings">
       <div class="settings-row">
         <span>Звук</span>
-        <label class="switch"><input type="checkbox" id="soundToggle"><span class="switch-track"></span></label>
+        <label class="switch"><input type="checkbox" id="soundToggle" checked><span class="switch-track"></span></label>
       </div>
       <div class="settings-row">
         <span>Вибрация</span>
-        <label class="switch"><input type="checkbox" id="vibrateToggle"><span class="switch-track"></span></label>
+        <label class="switch"><input type="checkbox" id="vibrateToggle" checked><span class="switch-track"></span></label>
       </div>
     </div>
 
@@ -327,7 +337,7 @@ h1{font-size:36px;margin:6px 0 0}
 
   // Fresh state: deliberately does not import previously broken localStorage.
   const STORAGE = 'pulse-timer-clean-v1-workouts';
-  const PREFS = 'pulse-timer-clean-v1-prefs';
+  const PREFS = 'pulse-timer-clean-v2-prefs';
 
   const normalize = w => ({
     id:String(w?.id || uid()),
@@ -390,7 +400,83 @@ h1{font-size:36px;margin:6px 0 0}
     if(audioCtx?.state==='suspended') audioCtx.resume().catch(()=>{});
   }
 
-  function tone({from=1000,to=1000,dur=.12,delay=0,gain=.38,type='square'}={}){
+  const signalPlayers={};
+  let signalsUnlocked=false;
+
+  function makeSignalWav(kind){
+    const sampleRate=44100;
+    const spec=kind==='workStart'
+      ? [{f1:1050,f2:1900,d:.17,g:.96},{f1:1350,f2:2350,d:.19,g:1}]
+      : kind==='workEnd'
+      ? [{f1:2150,f2:1050,d:.19,g:1},{f1:1650,f2:760,d:.23,g:.94}]
+      : kind==='finish'
+      ? [{f1:1150,f2:1750,d:.16,g:.94},{f1:1450,f2:2100,d:.18,g:.98},{f1:1750,f2:2500,d:.23,g:1}]
+      : [{f1:900,f2:1350,d:.13,g:.9}];
+
+    const gap=.055;
+    const total=spec.reduce((s,x)=>s+x.d,0)+gap*(spec.length-1);
+    const frames=Math.ceil(total*sampleRate);
+    const bytes=new ArrayBuffer(44+frames*2);
+    const view=new DataView(bytes);
+    const wr=(o,s)=>{for(let i=0;i<s.length;i++)view.setUint8(o+i,s.charCodeAt(i))};
+
+    wr(0,'RIFF'); view.setUint32(4,36+frames*2,true); wr(8,'WAVE');
+    wr(12,'fmt '); view.setUint32(16,16,true); view.setUint16(20,1,true);
+    view.setUint16(22,1,true); view.setUint32(24,sampleRate,true);
+    view.setUint32(28,sampleRate*2,true); view.setUint16(32,2,true);
+    view.setUint16(34,16,true); wr(36,'data'); view.setUint32(40,frames*2,true);
+
+    let cursor=0;
+    for(const s of spec){
+      const n=Math.floor(s.d*sampleRate);
+      for(let i=0;i<n;i++){
+        const t=i/sampleRate;
+        const k=i/Math.max(1,n-1);
+        const freq=s.f1*Math.pow(s.f2/s.f1,k);
+        const phase=2*Math.PI*freq*t;
+        const attack=Math.min(1,i/(sampleRate*.006));
+        const release=Math.min(1,(n-i)/(sampleRate*.028));
+        const env=Math.min(attack,release);
+        const harmonic=.72*Math.sin(phase)+.22*Math.sin(phase*2)+.06*Math.sin(phase*3);
+        const sample=Math.max(-1,Math.min(1,harmonic*env*s.g));
+        view.setInt16(44+(cursor+i)*2,Math.round(sample*32767),true);
+      }
+      cursor+=n;
+      cursor+=Math.floor(gap*sampleRate);
+    }
+    return URL.createObjectURL(new Blob([bytes],{type:'audio/wav'}));
+  }
+
+  function initSignalPlayers(){
+    if(Object.keys(signalPlayers).length) return;
+    for(const kind of ['ready','workStart','workEnd','finish']){
+      const a=new Audio(makeSignalWav(kind));
+      a.preload='auto';
+      a.volume=1;
+      a.playsInline=true;
+      signalPlayers[kind]=a;
+    }
+  }
+
+  async function unlockSignals(){
+    initSignalPlayers();
+    ensureAudio();
+    if(signalsUnlocked) return;
+    signalsUnlocked=true;
+    for(const a of Object.values(signalPlayers)){
+      try{
+        a.volume=.001;
+        a.currentTime=0;
+        const p=a.play();
+        if(p?.then) await p.catch(()=>{});
+        a.pause();
+        a.currentTime=0;
+        a.volume=1;
+      }catch{}
+    }
+  }
+
+  function tone({from=1000,to=1000,dur=.12,delay=0,gain=.42,type='square'}={}){
     if(!sound) return;
     ensureAudio();
     if(!audioCtx) return;
@@ -400,62 +486,88 @@ h1{font-size:36px;margin:6px 0 0}
       const g=audioCtx.createGain();
       const comp=audioCtx.createDynamicsCompressor();
 
-      comp.threshold.value=-18;
-      comp.knee.value=8;
-      comp.ratio.value=5;
-      comp.attack.value=.002;
-      comp.release.value=.08;
+      comp.threshold.value=-20;
+      comp.knee.value=6;
+      comp.ratio.value=8;
+      comp.attack.value=.001;
+      comp.release.value=.06;
 
       o.type=type;
       o.frequency.setValueAtTime(Math.max(80,from),start);
       o.frequency.exponentialRampToValueAtTime(Math.max(80,to),start+dur);
 
       g.gain.setValueAtTime(.0001,start);
-      g.gain.exponentialRampToValueAtTime(gain,start+.012);
-      g.gain.setValueAtTime(gain,start+Math.max(.014,dur-.035));
+      g.gain.exponentialRampToValueAtTime(gain,start+.008);
+      g.gain.setValueAtTime(gain,start+Math.max(.012,dur-.03));
       g.gain.exponentialRampToValueAtTime(.0001,start+dur);
 
-      o.connect(g);
-      g.connect(comp);
-      comp.connect(audioCtx.destination);
-      o.start(start);
-      o.stop(start+dur+.02);
+      o.connect(g); g.connect(comp); comp.connect(audioCtx.destination);
+      o.start(start); o.stop(start+dur+.02);
     }catch{}
   }
 
   function beep(freq=900,dur=.1){
-    tone({from:freq,to:freq,dur,gain:.34,type:'square'});
+    tone({from:freq,to:freq,dur,gain:.44,type:'square'});
   }
 
-  function playSignal(kind){
+  async function playSignal(kind){
     if(!sound) return;
+    initSignalPlayers();
     ensureAudio();
-    if(kind==='workStart'){
-      tone({from:1180,to:1780,dur:.15,delay:0,gain:.48,type:'square'});
-      tone({from:1420,to:2180,dur:.18,delay:.18,gain:.52,type:'square'});
-    }else if(kind==='workEnd'){
-      tone({from:2050,to:1180,dur:.18,delay:0,gain:.50,type:'square'});
-      tone({from:1660,to:820,dur:.22,delay:.21,gain:.46,type:'square'});
-    }else if(kind==='finish'){
-      tone({from:1200,to:1700,dur:.15,delay:0,gain:.48,type:'square'});
-      tone({from:1500,to:2100,dur:.17,delay:.19,gain:.52,type:'square'});
-      tone({from:1750,to:2350,dur:.22,delay:.40,gain:.54,type:'square'});
-    }else if(kind==='ready'){
-      tone({from:980,to:1280,dur:.11,delay:0,gain:.38,type:'square'});
+
+    const a=signalPlayers[kind]||signalPlayers.ready;
+    try{
+      a.pause();
+      a.currentTime=0;
+      a.volume=1;
+      const p=a.play();
+      if(p?.catch){
+        await p.catch(()=>{
+          if(kind==='workStart'){
+            tone({from:1120,to:1950,dur:.17,gain:.54});
+            tone({from:1420,to:2350,dur:.19,delay:.19,gain:.58});
+          }else if(kind==='workEnd'){
+            tone({from:2150,to:1050,dur:.19,gain:.57});
+            tone({from:1650,to:760,dur:.23,delay:.22,gain:.54});
+          }else if(kind==='finish'){
+            tone({from:1180,to:1780,dur:.16,gain:.55});
+            tone({from:1480,to:2150,dur:.18,delay:.19,gain:.58});
+            tone({from:1780,to:2500,dur:.23,delay:.41,gain:.6});
+          }else{
+            tone({from:900,to:1350,dur:.13,gain:.5});
+          }
+        });
+      }
+    }catch{
+      beep(kind==='workEnd'?850:1250,.16);
     }
   }
 
   const HAPTIC_PATTERNS={
-    tap:12,
-    toggle:22,
-    workoutStart:[38,26,70],
-    workStart:[70,36,105],
-    workEnd:[105,44,72],
-    countdown3:22,
-    countdown2:34,
-    countdown1:[52,24,82],
-    finish:[95,48,145,55,190]
+    tap:[18],
+    toggle:[30],
+    workoutStart:[55,35,95],
+    workStart:[90,45,135],
+    workEnd:[130,55,90],
+    countdown3:[28],
+    countdown2:[42],
+    countdown1:[75,30,110],
+    finish:[120,55,170,60,220]
   };
+
+  function pulseNativeSwitch(pattern){
+    const sw=$('hapticSwitch');
+    if(!sw) return false;
+    const pulses=Array.isArray(pattern)?pattern:[pattern];
+    let t=0;
+    for(let i=0;i<pulses.length;i+=2){
+      setTimeout(()=>{
+        try{sw.click()}catch{}
+      },t);
+      t+=Number(pulses[i]||20)+Number(pulses[i+1]||0);
+    }
+    return true;
+  }
 
   async function haptic(kind='tap'){
     if(!vibrate) return false;
@@ -463,19 +575,19 @@ h1{font-size:36px;margin:6px 0 0}
       ? kind
       : (HAPTIC_PATTERNS[kind]??HAPTIC_PATTERNS.tap);
 
+    let fired=false;
+
     try{
       const cap=window.Capacitor?.Plugins?.Haptics;
       if(cap){
         const strong=['workStart','workEnd','finish','countdown1','workoutStart'].includes(kind);
         if(cap.impact){
           await cap.impact({style:strong?'HEAVY':'MEDIUM'});
-          if(Array.isArray(pattern)&&pattern.length>2&&cap.vibrate){
-            setTimeout(()=>cap.vibrate({duration:Math.max(...pattern)}).catch?.(()=>{}),45);
-          }
-        }else if(cap.vibrate){
-          await cap.vibrate({duration:Array.isArray(pattern)?Math.max(...pattern):pattern});
+          fired=true;
         }
-        return true;
+        if(Array.isArray(pattern)&&cap.vibrate){
+          setTimeout(()=>cap.vibrate({duration:Math.max(...pattern)}).catch?.(()=>{}),40);
+        }
       }
     }catch{}
 
@@ -485,14 +597,19 @@ h1{font-size:36px;margin:6px 0 0}
         || window.webkit?.messageHandlers?.Haptics;
       if(bridge?.postMessage){
         bridge.postMessage({kind,pattern});
-        return true;
+        fired=true;
       }
     }catch{}
 
     try{
-      if(typeof navigator.vibrate==='function') return navigator.vibrate(pattern);
+      if(typeof navigator.vibrate==='function'){
+        const ok=navigator.vibrate(pattern);
+        fired=ok||fired;
+      }
     }catch{}
-    return false;
+
+    pulseNativeSwitch(pattern);
+    return fired;
   }
 
   function buildPhases(w){
@@ -569,7 +686,9 @@ h1{font-size:36px;margin:6px 0 0}
     if(idx>=0) workouts[idx]=clean; else workouts.unshift(clean);
     editing=clean;
     saveWorkouts();
-    renderCards();
+    document.addEventListener('pointerdown',()=>{unlockSignals()},{once:true,capture:true});
+  document.addEventListener('touchstart',()=>{unlockSignals()},{once:true,capture:true,passive:true});
+  renderCards();
   }
 
   function openPad(key){
@@ -582,8 +701,8 @@ h1{font-size:36px;margin:6px 0 0}
   const keys=['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
   $('keys').innerHTML=keys.map(k=>`<button data-key="${k}">${k}</button>`).join('');
 
-  function startWorkout(w){
-    ensureAudio();
+  async function startWorkout(w){
+    await unlockSignals();
     active=normalize(w);
     phases=buildPhases(active);
     if(!phases.length) return;
@@ -817,7 +936,7 @@ h1{font-size:36px;margin:6px 0 0}
 
   $('soundToggle').checked=sound;
   $('vibrateToggle').checked=vibrate;
-  $('soundToggle').addEventListener('change',e=>{sound=e.target.checked;savePrefs();if(sound){ensureAudio();playSignal('ready')}});
+  $('soundToggle').addEventListener('change',async e=>{sound=e.target.checked;savePrefs();if(sound){await unlockSignals();playSignal('ready')}});
   $('vibrateToggle').addEventListener('change',e=>{vibrate=e.target.checked;savePrefs();if(vibrate)haptic('toggle')});
 
   ['gesturestart','gesturechange'].forEach(type=>document.addEventListener(type,e=>e.preventDefault(),{passive:false}));
