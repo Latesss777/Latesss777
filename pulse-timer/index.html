@@ -389,20 +389,110 @@ h1{font-size:36px;margin:6px 0 0}
     }
     if(audioCtx?.state==='suspended') audioCtx.resume().catch(()=>{});
   }
-  function beep(freq=900,dur=.1){
+
+  function tone({from=1000,to=1000,dur=.12,delay=0,gain=.38,type='square'}={}){
     if(!sound) return;
     ensureAudio();
     if(!audioCtx) return;
     try{
-      const o=audioCtx.createOscillator(),g=audioCtx.createGain();
-      o.type='square';o.frequency.value=freq;g.gain.value=.13;
-      o.connect(g);g.connect(audioCtx.destination);
-      o.start();g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+dur);o.stop(audioCtx.currentTime+dur);
+      const start=audioCtx.currentTime+delay;
+      const o=audioCtx.createOscillator();
+      const g=audioCtx.createGain();
+      const comp=audioCtx.createDynamicsCompressor();
+
+      comp.threshold.value=-18;
+      comp.knee.value=8;
+      comp.ratio.value=5;
+      comp.attack.value=.002;
+      comp.release.value=.08;
+
+      o.type=type;
+      o.frequency.setValueAtTime(Math.max(80,from),start);
+      o.frequency.exponentialRampToValueAtTime(Math.max(80,to),start+dur);
+
+      g.gain.setValueAtTime(.0001,start);
+      g.gain.exponentialRampToValueAtTime(gain,start+.012);
+      g.gain.setValueAtTime(gain,start+Math.max(.014,dur-.035));
+      g.gain.exponentialRampToValueAtTime(.0001,start+dur);
+
+      o.connect(g);
+      g.connect(comp);
+      comp.connect(audioCtx.destination);
+      o.start(start);
+      o.stop(start+dur+.02);
     }catch{}
   }
-  function haptic(pattern=12){
-    if(!vibrate) return;
-    try{navigator.vibrate?.(pattern)}catch{}
+
+  function beep(freq=900,dur=.1){
+    tone({from:freq,to:freq,dur,gain:.34,type:'square'});
+  }
+
+  function playSignal(kind){
+    if(!sound) return;
+    ensureAudio();
+    if(kind==='workStart'){
+      tone({from:1180,to:1780,dur:.15,delay:0,gain:.48,type:'square'});
+      tone({from:1420,to:2180,dur:.18,delay:.18,gain:.52,type:'square'});
+    }else if(kind==='workEnd'){
+      tone({from:2050,to:1180,dur:.18,delay:0,gain:.50,type:'square'});
+      tone({from:1660,to:820,dur:.22,delay:.21,gain:.46,type:'square'});
+    }else if(kind==='finish'){
+      tone({from:1200,to:1700,dur:.15,delay:0,gain:.48,type:'square'});
+      tone({from:1500,to:2100,dur:.17,delay:.19,gain:.52,type:'square'});
+      tone({from:1750,to:2350,dur:.22,delay:.40,gain:.54,type:'square'});
+    }else if(kind==='ready'){
+      tone({from:980,to:1280,dur:.11,delay:0,gain:.38,type:'square'});
+    }
+  }
+
+  const HAPTIC_PATTERNS={
+    tap:12,
+    toggle:22,
+    workoutStart:[38,26,70],
+    workStart:[70,36,105],
+    workEnd:[105,44,72],
+    countdown3:22,
+    countdown2:34,
+    countdown1:[52,24,82],
+    finish:[95,48,145,55,190]
+  };
+
+  async function haptic(kind='tap'){
+    if(!vibrate) return false;
+    const pattern=Array.isArray(kind)||typeof kind==='number'
+      ? kind
+      : (HAPTIC_PATTERNS[kind]??HAPTIC_PATTERNS.tap);
+
+    try{
+      const cap=window.Capacitor?.Plugins?.Haptics;
+      if(cap){
+        const strong=['workStart','workEnd','finish','countdown1','workoutStart'].includes(kind);
+        if(cap.impact){
+          await cap.impact({style:strong?'HEAVY':'MEDIUM'});
+          if(Array.isArray(pattern)&&pattern.length>2&&cap.vibrate){
+            setTimeout(()=>cap.vibrate({duration:Math.max(...pattern)}).catch?.(()=>{}),45);
+          }
+        }else if(cap.vibrate){
+          await cap.vibrate({duration:Array.isArray(pattern)?Math.max(...pattern):pattern});
+        }
+        return true;
+      }
+    }catch{}
+
+    try{
+      const bridge=window.webkit?.messageHandlers?.PulseHaptics
+        || window.webkit?.messageHandlers?.haptics
+        || window.webkit?.messageHandlers?.Haptics;
+      if(bridge?.postMessage){
+        bridge.postMessage({kind,pattern});
+        return true;
+      }
+    }catch{}
+
+    try{
+      if(typeof navigator.vibrate==='function') return navigator.vibrate(pattern);
+    }catch{}
+    return false;
   }
 
   function buildPhases(w){
@@ -506,8 +596,8 @@ h1{font-size:36px;margin:6px 0 0}
     renderTimer(true);
     updatePauseIcon();
     startTicker();
-    haptic([24,30,48]);
-    beep(980,.10);
+    haptic('workoutStart');
+    playSignal('ready');
   }
 
   function startTicker(){
@@ -522,29 +612,49 @@ h1{font-size:36px;margin:6px 0 0}
       const sec=Math.ceil(remainingMs/1000);
       if(sec<=3&&sec>=1&&sec!==lastCountdownSec){
         lastCountdownSec=sec;
-        haptic(sec===1?[40,25,70]:18);
-        beep(1200,.07);
+        haptic(sec===3?'countdown3':sec===2?'countdown2':'countdown1');
+        beep(sec===1?1380:1180,.075);
       }
       renderTimer(false);
     },200);
   }
 
   function nextPhase(auto){
+    const prev=phases[phaseIndex];
     const next=phaseIndex+1;
+
     if(next>=phases.length){
       running=false;
       remainingMs=0;
       renderTimer(false);
       updatePauseIcon();
-      if(auto){beep(820,.28);haptic([60,40,100])}
+      if(auto){
+        if(prev?.type==='work'){
+          playSignal('workEnd');
+          haptic('workEnd');
+        }
+        setTimeout(()=>playSignal('finish'),460);
+        setTimeout(()=>haptic('finish'),460);
+      }
       return;
     }
+
     phaseIndex=next;
     remainingMs=phases[phaseIndex].duration*1000;
     deadline=Date.now()+remainingMs;
     lastCountdownSec=null;
     const p=phases[phaseIndex];
-    if(auto){beep(p.type==='work'?1080:620,.13);haptic(p.type==='work'?[34,28,65]:24)}
+
+    if(auto){
+      if(prev?.type==='work' && p.type!=='work'){
+        playSignal('workEnd');
+        haptic('workEnd');
+      }
+      if(p.type==='work'){
+        playSignal('workStart');
+        haptic('workStart');
+      }
+    }
     renderTimer(true);
   }
 
@@ -707,8 +817,8 @@ h1{font-size:36px;margin:6px 0 0}
 
   $('soundToggle').checked=sound;
   $('vibrateToggle').checked=vibrate;
-  $('soundToggle').addEventListener('change',e=>{sound=e.target.checked;savePrefs();if(sound)beep(920,.08)});
-  $('vibrateToggle').addEventListener('change',e=>{vibrate=e.target.checked;savePrefs();if(vibrate)haptic(18)});
+  $('soundToggle').addEventListener('change',e=>{sound=e.target.checked;savePrefs();if(sound){ensureAudio();playSignal('ready')}});
+  $('vibrateToggle').addEventListener('change',e=>{vibrate=e.target.checked;savePrefs();if(vibrate)haptic('toggle')});
 
   ['gesturestart','gesturechange'].forEach(type=>document.addEventListener(type,e=>e.preventDefault(),{passive:false}));
   document.addEventListener('touchmove',e=>{if(e.touches?.length>1)e.preventDefault()},{passive:false});
