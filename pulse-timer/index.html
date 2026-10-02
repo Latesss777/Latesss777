@@ -153,6 +153,28 @@ h1{font-size:38px;margin:6px 0 0}
   .footer-nav{bottom:max(4px,env(safe-area-inset-bottom));height:58px;grid-template-columns:52px 1fr 52px}
   .footer-nav button{width:50px;height:50px}.footer-nav small{font-size:8px}.footer-nav b{margin-top:3px;font-size:26px}
 }
+
+/* === HOME BOTTOM BACKGROUND FIX v8 === */
+.screen{
+  min-height:100dvh!important;
+  height:100dvh!important;
+  background:
+    radial-gradient(circle at 18% 5%,#252525 0,transparent 34%),
+    radial-gradient(circle at 82% 92%,#1a1a1a 0,transparent 38%),
+    #101010!important;
+}
+.screen::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  background:#101010;
+  pointer-events:none;
+}
+.cards{
+  background:transparent!important;
+}
+
 </style>
 </head>
 <body>
