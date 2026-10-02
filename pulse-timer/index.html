@@ -369,13 +369,17 @@ h1{font-size:36px;margin:6px 0 0}
 }
 
 /* 3-second visual approach cue */
-.phase-bg.approach-pulse{transform-origin:center;animation:approachPulse var(--pulse-speed,.78s) cubic-bezier(.34,.05,.2,1) infinite}
-.phase-bg.approach-pulse.pulse-3{--pulse-speed:.84s;--pulse-bright:1.16}
-.phase-bg.approach-pulse.pulse-2{--pulse-speed:.62s;--pulse-bright:1.28}
-.phase-bg.approach-pulse.pulse-1{--pulse-speed:.42s;--pulse-bright:1.42}
-@keyframes approachPulse{
-  0%,100%{transform:scale(1);filter:brightness(1) saturate(1)}
-  48%{transform:scale(1.025);filter:brightness(var(--pulse-bright,1.2)) saturate(1.16)}
+.phase-bg.timer-beat{
+  transform-origin:center;
+  animation:timerBeat var(--beat-dur,.22s) cubic-bezier(.2,.75,.22,1) 1;
+}
+.phase-bg.timer-beat.beat-soft{--beat-scale:1.014;--beat-bright:1.13;--beat-sat:1.08;--beat-dur:.18s}
+.phase-bg.timer-beat.beat-medium{--beat-scale:1.023;--beat-bright:1.23;--beat-sat:1.14;--beat-dur:.22s}
+.phase-bg.timer-beat.beat-strong{--beat-scale:1.034;--beat-bright:1.36;--beat-sat:1.20;--beat-dur:.28s}
+@keyframes timerBeat{
+  0%{transform:scale(1);filter:brightness(1) saturate(1)}
+  34%{transform:scale(var(--beat-scale,1.02));filter:brightness(var(--beat-bright,1.2)) saturate(var(--beat-sat,1.12))}
+  100%{transform:scale(1);filter:brightness(1) saturate(1)}
 }
 
 
@@ -809,8 +813,23 @@ h1{font-size:36px;margin:6px 0 0}
     }catch{}
   }
 
+  function pulseTimerBackground(delay=0,intensity='medium'){
+    const fire=()=>{
+      const bg=$('phaseBg');
+      if(!bg||$('timer')?.classList.contains('hidden')) return;
+      bg.classList.remove('timer-beat','beat-soft','beat-medium','beat-strong');
+      void bg.offsetWidth;
+      bg.classList.add('timer-beat','beat-'+intensity);
+      const clear=()=>bg.classList.remove('timer-beat','beat-soft','beat-medium','beat-strong');
+      bg.addEventListener('animationend',clear,{once:true});
+    };
+    if(delay>0) setTimeout(fire,Math.round(delay*1000));
+    else fire();
+  }
+
   function softTick(step=3){
     const notes={3:293.66,2:329.63,1:369.99};
+    pulseTimerBackground(0,step===1?'strong':step===2?'medium':'soft');
     warmNote(notes[step]||329.63,{dur:.075,gain:.105,slide:.985});
   }
 
@@ -822,26 +841,35 @@ h1{font-size:36px;margin:6px 0 0}
     /* Start = rising fifth. End = descending third/fifth.
        All tones stay in a warm mid range — no high-pitched beeps. */
     if(kind==='preStart'){
+      pulseTimerBackground(0,'soft');
       warmNote(293.66,{dur:.10,gain:.12,slide:1.01});
       return;
     }
     if(kind==='workStart'){
+      pulseTimerBackground(0,'medium');
+      pulseTimerBackground(.115,'strong');
       warmNote(392.00,{dur:.16,gain:.19,slide:1.015});
       warmNote(587.33,{delay:.115,dur:.22,gain:.23,slide:1.008});
       return;
     }
     if(kind==='workEnd'){
+      pulseTimerBackground(0,'medium');
+      pulseTimerBackground(.12,'soft');
       warmNote(523.25,{dur:.16,gain:.18,slide:.992});
       warmNote(329.63,{delay:.12,dur:.25,gain:.22,slide:.985});
       return;
     }
     if(kind==='finish'){
+      pulseTimerBackground(0,'soft');
+      pulseTimerBackground(.105,'medium');
+      pulseTimerBackground(.225,'strong');
       warmNote(392.00,{dur:.14,gain:.16});
       warmNote(523.25,{delay:.105,dur:.17,gain:.18});
       warmNote(659.25,{delay:.225,dur:.26,gain:.21,slide:1.008});
       return;
     }
     /* ready */
+    pulseTimerBackground(0,'soft');
     warmNote(440.00,{dur:.16,gain:.14,slide:1.01});
   }
 
@@ -1444,10 +1472,7 @@ h1{font-size:36px;margin:6px 0 0}
     const chrome=p.type==='prep'?'#10361a':p.type==='work'?'#260b13':'#0b1631';
     document.documentElement.style.setProperty('--phase',chrome);
     document.documentElement.style.setProperty('--page',chrome);
-    const approachSec=Math.ceil(remainingMs/1000);
-    const following=phases[phaseIndex+1];
-    const approachingWork=p.type!=='work' && following?.type==='work' && approachSec>=1 && approachSec<=3;
-    $('phaseBg').className='phase-bg '+p.type+(approachingWork?' approach-pulse pulse-'+approachSec:'');
+    $('phaseBg').className='phase-bg '+p.type;
     $('themeColor').setAttribute('content',chrome);
 
     const total=phases.reduce((s,x)=>s+x.duration,0);
