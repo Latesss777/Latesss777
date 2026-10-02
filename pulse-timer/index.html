@@ -541,6 +541,8 @@ h1{font-size:36px;margin:6px 0 0}
   let cardMenuWorkoutId = null;
   let backgroundKeeper = null;
   let wakeLock = null;
+  let lastMediaSecond = null;
+  let lastMediaKey = '';
 
   const COLOR_OPTIONS = [
     ['graphite','Графит'],['berry','Ягодный'],['orange','Оранжевый'],
@@ -712,6 +714,65 @@ h1{font-size:36px;margin:6px 0 0}
     return URL.createObjectURL(new Blob([bytes],{type:'audio/wav'}));
   }
 
+  function setupMediaActions(){
+    if(!('mediaSession' in navigator)) return;
+    const safe=(action,handler)=>{
+      try{navigator.mediaSession.setActionHandler(action,handler)}catch{}
+    };
+    safe('play',()=>{
+      if(active&&!running) $('pauseBtn')?.click();
+    });
+    safe('pause',()=>{
+      if(active&&running) $('pauseBtn')?.click();
+    });
+    safe('previoustrack',()=>{
+      if(active) previousPhase();
+    });
+    safe('nexttrack',()=>{
+      if(active&&phaseIndex<phases.length-1) nextPhase(false);
+    });
+  }
+
+  function updateMediaCenter(force=false){
+    if(!active||!phases.length||!('mediaSession' in navigator)) return;
+    const p=phases[phaseIndex];
+    if(!p) return;
+
+    const sec=Math.max(0,Math.ceil(remainingMs/1000));
+    const key=[phaseIndex,p.type,p.set,p.cycle,running].join('|');
+    if(!force && sec===lastMediaSecond && key===lastMediaKey) return;
+    lastMediaSecond=sec;
+    lastMediaKey=key;
+
+    const phaseName=p.type==='work'?'РАБОТА':
+      p.type==='rest'?'ОТДЫХ':
+      p.type==='setRest'?'ОТДЫХ МЕЖДУ ПОДХОДАМИ':
+      p.type==='prep'?'ПОДГОТОВКА':
+      p.type==='coolDown'?'ЗАВЕРШЕНИЕ':
+      String(p.label||'ТРЕНИРОВКА').toUpperCase();
+
+    const cycleText=p.cycle>0?' · Цикл '+Math.max(1,p.cycle)+'/'+active.cycles:'';
+    const setText='Подход '+p.set+'/'+active.sets;
+
+    try{
+      navigator.mediaSession.metadata=new MediaMetadata({
+        title:phaseName+' · '+fmt(sec),
+        artist:setText+cycleText,
+        album:active.name
+      });
+      navigator.mediaSession.playbackState=running?'playing':'paused';
+
+      if(typeof navigator.mediaSession.setPositionState==='function' && p.duration>0){
+        const elapsed=Math.max(0,Math.min(p.duration-.01,p.duration-remainingMs/1000));
+        navigator.mediaSession.setPositionState({
+          duration:p.duration,
+          playbackRate:1,
+          position:elapsed
+        });
+      }
+    }catch{}
+  }
+
   async function startBackgroundKeeper(){
     try{
       if(!backgroundKeeper){
@@ -721,28 +782,30 @@ h1{font-size:36px;margin:6px 0 0}
         backgroundKeeper.playsInline=true;
         backgroundKeeper.volume=1;
       }
+      setupMediaActions();
       await backgroundKeeper.play().catch(()=>{});
-      if('mediaSession' in navigator){
-        try{
-          navigator.mediaSession.metadata=new MediaMetadata({
-            title:active?.name||'Pulse Timer',
-            artist:'Pulse Timer',
-            album:'Тренировка'
-          });
-          navigator.mediaSession.playbackState='playing';
-        }catch{}
-      }
+      updateMediaCenter(true);
     }catch{}
   }
 
   function pauseBackgroundKeeper(){
     try{backgroundKeeper?.pause()}catch{}
-    try{if('mediaSession' in navigator)navigator.mediaSession.playbackState='paused'}catch{}
+    try{
+      if('mediaSession' in navigator)navigator.mediaSession.playbackState='paused';
+      updateMediaCenter(true);
+    }catch{}
   }
 
   function stopBackgroundKeeper(){
     try{if(backgroundKeeper){backgroundKeeper.pause();backgroundKeeper.currentTime=0}}catch{}
-    try{if('mediaSession' in navigator)navigator.mediaSession.playbackState='none'}catch{}
+    try{
+      if('mediaSession' in navigator){
+        navigator.mediaSession.playbackState='none';
+        navigator.mediaSession.metadata=null;
+      }
+    }catch{}
+    lastMediaSecond=null;
+    lastMediaKey='';
   }
 
   async function holdWakeLock(){
@@ -1223,6 +1286,7 @@ h1{font-size:36px;margin:6px 0 0}
     $('allTotal').textContent=fmt(total);
     $('progressBar').style.width=(total?Math.min(100,elapsed/total*100):0)+'%';
     $('intervalCounter').textContent=(phaseIndex+1)+'/'+phases.length;
+    updateMediaCenter(false);
 
     $('intervals').innerHTML=phases.map((x,i)=>`
       <button class="int-row ${i===phaseIndex?'current':''}" data-index="${i}">
@@ -1327,7 +1391,9 @@ h1{font-size:36px;margin:6px 0 0}
       startBackgroundKeeper();
       holdWakeLock();
     }
-    updatePauseIcon();haptic(12);
+    updatePauseIcon();
+    updateMediaCenter(true);
+    haptic(12);
   });
 
   $('prevBtn').addEventListener('click',previousPhase);
