@@ -129,7 +129,7 @@ h1{font-size:36px;margin:6px 0 0}
   display:grid;
   grid-template-rows:auto auto auto minmax(0,1fr) auto;
   gap:0;
-  padding:calc(env(safe-area-inset-top) + 18px) 18px calc(env(safe-area-inset-bottom) + 8px);
+  padding:calc(env(safe-area-inset-top) + 18px) 18px 0;
 }
 .timer-head{display:grid;grid-template-columns:56px minmax(0,1fr) 56px;align-items:center;gap:12px}
 .timer-head .icon-btn{width:56px;height:56px;border-radius:50%;background:rgba(4,14,7,.64)}
@@ -157,7 +157,7 @@ h1{font-size:36px;margin:6px 0 0}
 .int-label{font-family:'Russo One';font-size:clamp(19px,4.8vw,25px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .int-duration{font-size:clamp(24px,6vw,33px);font-weight:600;white-space:nowrap}
 
-.footer-nav{min-height:78px;display:grid;grid-template-columns:62px 1fr 62px;align-items:center;padding-top:4px}
+.footer-nav{min-height:calc(78px + env(safe-area-inset-bottom));display:grid;grid-template-columns:62px 1fr 62px;align-items:center;padding:4px 0 env(safe-area-inset-bottom)}
 .footer-nav button{width:60px;height:60px;border-radius:50%;border:1px solid rgba(255,255,255,.22);background:rgba(4,16,7,.66);display:grid;place-items:center;padding:0}
 .footer-nav>div{text-align:center}
 .footer-nav small{display:block;font-size:11px;letter-spacing:.22em;color:rgba(255,255,255,.52)}
@@ -190,7 +190,7 @@ h1{font-size:36px;margin:6px 0 0}
   .intervals{margin-top:8px}
   .int-row{min-height:52px;margin-bottom:6px;border-radius:16px;grid-template-columns:30px minmax(0,1fr) max-content;padding:0 12px}
   .int-index{font-size:16px}.int-label{font-size:17px}.int-duration{font-size:21px}
-  .footer-nav{min-height:60px;grid-template-columns:52px 1fr 52px}
+  .footer-nav{min-height:calc(60px + env(safe-area-inset-bottom));grid-template-columns:52px 1fr 52px;padding-bottom:env(safe-area-inset-bottom)}
   .footer-nav button{width:50px;height:50px}.footer-nav small{font-size:8px}.footer-nav b{font-size:28px;margin-top:3px}
 }
 </style>
