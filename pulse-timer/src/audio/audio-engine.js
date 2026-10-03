@@ -105,7 +105,10 @@
     async function resumeContext() {
       const ctx = ensureContext();
       if (!ctx) return false;
-      if (ctx.state === 'running') return true;
+      if (ctx.state === 'running') {
+        lastError = '';
+        return true;
+      }
 
       try {
         await Promise.race([
@@ -138,7 +141,9 @@
       } catch (error) {
         recordError(error, 'resume retry');
       }
-      return rebuilt.state === 'running';
+      const recovered = rebuilt.state === 'running';
+      if (recovered) lastError = '';
+      return recovered;
     }
 
     function decodeAudioData(arrayBuffer) {
