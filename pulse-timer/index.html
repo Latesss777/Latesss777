@@ -1343,7 +1343,10 @@ h1,h2,h3,.phase-title,.card-live-title{font-weight:760;letter-spacing:-.035em}
     async function resumeContext() {
       const ctx = ensureContext();
       if (!ctx) return false;
-      if (ctx.state === 'running') return true;
+      if (ctx.state === 'running') {
+        lastError = '';
+        return true;
+      }
 
       try {
         await Promise.race([
@@ -1376,7 +1379,9 @@ h1,h2,h3,.phase-title,.card-live-title{font-weight:760;letter-spacing:-.035em}
       } catch (error) {
         recordError(error, 'resume retry');
       }
-      return rebuilt.state === 'running';
+      const recovered = rebuilt.state === 'running';
+      if (recovered) lastError = '';
+      return recovered;
     }
 
     function decodeAudioData(arrayBuffer) {
