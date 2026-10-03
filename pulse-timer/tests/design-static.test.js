@@ -13,8 +13,9 @@ if(!glass.includes('-webkit-backdrop-filter')||!glass.includes('backdrop-filter'
 if(!glass.includes('@supports not ((backdrop-filter')) throw new Error('Glass fallback missing');
 if(!glass.includes('prefers-reduced-motion')) throw new Error('Reduced motion support missing');
 if(!glass.includes('prefers-contrast:more')) throw new Error('Increased contrast support missing');
-if(!glass.includes('.phase-bg.work{--phase:#0a5d87')) throw new Error('Blue work phase token missing');
+if(!glass.includes('.phase-bg.work{--a:#9befff;--b:#2db8ee;--c:#c8f7ff;--phase:#168fc5')) throw new Error('Restored blue work phase token missing');
 if(!glass.includes('animation:none!important')) throw new Error('Timer pulse animation is not disabled');
+if(!glass.includes('radial-gradient(circle at 16% 8%,#242424')) throw new Error('Original home background not restored');
 if(!glass.includes('.card-visual')) throw new Error('Local vector card artwork missing');
 if((glass.match(/backdrop-filter:/g)||[]).length<12) throw new Error('Glass material coverage unexpectedly low');
 
