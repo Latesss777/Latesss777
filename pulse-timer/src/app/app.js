@@ -531,7 +531,6 @@
   async function playFinishSequence(){
     if(finishSequencePlayed)return;
     pendingFinishCue=false;
-    await unlockSignals();
     const bellPlayed=await playSignal('finish');
     if(!bellPlayed && document.hidden){
       pendingFinishCue=true;
