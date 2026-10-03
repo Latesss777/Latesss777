@@ -21,6 +21,9 @@ const sounds={
 const signalReport={};
 for(const [name,b64] of Object.entries(sounds)){
   if(b64.length<1000) throw new Error(name+' sound is unexpectedly small');
+  if(b64.length%4!==0) throw new Error(name+' base64 length is not divisible by 4');
+  if(!/^[A-Za-z0-9+/]*={0,2}$/.test(b64)) throw new Error(name+' base64 contains invalid characters/padding');
+  try{atob(b64)}catch(error){throw new Error(name+' is rejected by browser-compatible atob: '+error.message)}
   if(!html.includes(b64.slice(0,96))) throw new Error(name+' is not embedded in generated index');
 
   const bytes=Buffer.from(b64,'base64');
