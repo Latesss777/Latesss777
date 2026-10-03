@@ -2,7 +2,7 @@ import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { chromium } from 'playwright';
+import { webkit } from 'playwright';
 
 const here=path.dirname(fileURLToPath(import.meta.url));
 const root=path.resolve(here,'..');
@@ -18,7 +18,7 @@ const server=http.createServer((req,res)=>{
 });
 await new Promise(resolve=>server.listen(4173,'127.0.0.1',resolve));
 
-const browser=await chromium.launch({headless:true,args:['--autoplay-policy=no-user-gesture-required']});
+const browser=await webkit.launch({headless:true});
 const context=await browser.newContext({
   viewport:{width:393,height:852},
   deviceScaleFactor:2,
@@ -71,8 +71,9 @@ assert(glassStyle&&glassStyle!=='none','Settings icon is missing backdrop-filter
 await page.locator('#testSoundBtn').click();
 await page.waitForTimeout(1500);
 const audioStatus=await page.evaluate(()=>window.__pulseAudioDiagnostics?.status);
+console.log('AUDIO_STATUS_AFTER_TEST',JSON.stringify(audioStatus));
 assert(audioStatus,'Audio diagnostics missing');
-assert(Object.keys(audioStatus.decoded||{}).length===3,'Not all timer cues decoded after user gesture');
+assert(Object.keys(audioStatus.decoded||{}).length===3,'Not all timer cues decoded after user gesture: '+JSON.stringify(audioStatus));
 assert(audioStatus.lastCue==='workEnd','Sound test did not reach end cue');
 assert(await page.locator('audio').count()===0,'HTMLAudio element exists and may take over music');
 
