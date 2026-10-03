@@ -313,14 +313,6 @@
     $(id).classList.remove('hidden');
   }
 
-  const CARD_PHOTOS={
-    press:'https://images.unsplash.com/photo-1547919307-1ecb10702e6f?auto=format&fit=crop&fm=jpg&q=88&w=1800',
-    training:'https://images.unsplash.com/photo-1734630341082-0fec0e10126c?auto=format&fit=crop&fm=jpg&q=88&w=1800',
-    hiit:'https://images.unsplash.com/photo-1734630341082-0fec0e10126c?auto=format&fit=crop&fm=jpg&q=88&w=1800',
-    cardio:'https://images.unsplash.com/photo-1734630341082-0fec0e10126c?auto=format&fit=crop&fm=jpg&q=88&w=1800',
-    stretch:'https://images.unsplash.com/photo-1547919307-1ecb10702e6f?auto=format&fit=crop&fm=jpg&q=88&w=1800'
-  };
-
   function workoutKind(w){
     const n=String(w?.name||'').toUpperCase();
     if(n.includes('ПРЕСС')) return 'press';
@@ -340,7 +332,6 @@
   function renderCards(){
     $('cards').innerHTML=workouts.map(w=>{
       const kind=workoutKind(w);
-      const photo=CARD_PHOTOS[kind]||CARD_PHOTOS.training;
       return `
         <div class="card-row" data-id="${w.id}">
           <div class="card-delete-underlay" aria-hidden="true">
@@ -348,7 +339,9 @@
             <svg viewBox="0 0 24 24" fill="none" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13M10 11v5M14 11v5"/></svg>
           </div>
           <article class="card exact-art" data-theme="${w.color||'graphite'}" data-id="${w.id}">
-            <div class="card-photo" style="--photo:url('${photo}')"></div>
+            <div class="card-visual" aria-hidden="true">
+              <span class="card-visual-icon">${workoutIconSvg(kind)}</span>
+            </div>
             <div class="card-live">
               <button class="card-primary play-btn" data-id="${w.id}" aria-label="Запустить ${esc(w.name)}">
                 <span class="card-sport-icon">${workoutIconSvg(kind)}</span>
