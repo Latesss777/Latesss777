@@ -572,7 +572,10 @@ h1{font-size:36px;margin:6px 0 0}
     <div class="settings hidden" id="settings">
       <div class="settings-row">
         <span>Звук</span>
-        <label class="switch"><input type="checkbox" id="soundToggle" checked><span class="switch-track"></span></label>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button id="testSoundBtn" style="height:34px;padding:0 11px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:#181818;color:#fff;font-size:11px">Тест</button>
+          <label class="switch"><input type="checkbox" id="soundToggle" checked><span class="switch-track"></span></label>
+        </div>
       </div>
       <div class="settings-row">
         <span>Вибрация</span>
@@ -779,6 +782,9 @@ h1{font-size:36px;margin:6px 0 0}
   let padField = null;
   let padDraft = '0';
   let audioCtx = null;
+  let timerMasterGain = null;
+  let timerLimiter = null;
+  const recordedDataUrls = {};
   let shareWorkout = null;
   let currentShareUrl = '';
   let toastTimer = null;
@@ -943,8 +949,29 @@ h1{font-size:36px;margin:6px 0 0}
   function savePrefs(){localStorage.setItem(PREFS,JSON.stringify({sound,vibrate}))}
   function configureTimerAudioSession(){
     if('audioSession' in navigator){
-      try{navigator.audioSession.type='ambient'}catch{}
+      try{navigator.audioSession.type='transient'}catch{
+        try{navigator.audioSession.type='ambient'}catch{}
+      }
     }
+    try{
+      window.webkit?.messageHandlers?.PulseAudio?.postMessage?.({
+        action:'mixWithOthers',
+        duck:false,
+        notifyOthers:true
+      });
+    }catch{}
+  }
+
+  function releaseTimerAudioSession(){
+    try{
+      window.webkit?.messageHandlers?.PulseAudio?.postMessage?.({
+        action:'deactivate',
+        notifyOthers:true
+      });
+    }catch{}
+    try{
+      if('audioSession' in navigator)navigator.audioSession.type='ambient';
+    }catch{}
   }
 
   function ensureAudio(){
@@ -955,6 +982,23 @@ h1{font-size:36px;margin:6px 0 0}
         audioCtx=new Ctx({latencyHint:'interactive'});
       }catch{
         try{audioCtx=new (window.AudioContext||window.webkitAudioContext)()}catch{}
+      }
+    }
+    if(audioCtx && !timerMasterGain){
+      try{
+        timerMasterGain=audioCtx.createGain();
+        timerLimiter=audioCtx.createDynamicsCompressor();
+        timerMasterGain.gain.value=3.4;
+        timerLimiter.threshold.value=-8;
+        timerLimiter.knee.value=2;
+        timerLimiter.ratio.value=20;
+        timerLimiter.attack.value=.001;
+        timerLimiter.release.value=.10;
+        timerMasterGain.connect(timerLimiter);
+        timerLimiter.connect(audioCtx.destination);
+      }catch{
+        timerMasterGain=null;
+        timerLimiter=null;
       }
     }
     if(audioCtx?.state==='suspended')audioCtx.resume().catch(()=>{});
@@ -996,7 +1040,9 @@ h1{font-size:36px;margin:6px 0 0}
         try{
           const res=await fetch(path,{cache:'no-cache'});
           if(!res.ok)throw new Error('HTTP '+res.status);
-          recordedSounds[name]=await decodeTimerAudio(base64ToArrayBuffer(await res.text()));
+          const b64=(await res.text()).replace(/\s+/g,'');
+          recordedDataUrls[name]='data:audio/mpeg;base64,'+b64;
+          recordedSounds[name]=await decodeTimerAudio(base64ToArrayBuffer(b64));
         }catch(err){
           console.warn('Timer sound failed:',name,err);
         }
@@ -1040,10 +1086,28 @@ h1{font-size:36px;margin:6px 0 0}
       gain.gain.exponentialRampToValueAtTime(Math.max(.02,volume),now+.008);
       gain.gain.exponentialRampToValueAtTime(.0001,now+dur);
       osc.connect(gain);
-      gain.connect(audioCtx.destination);
+      if(timerMasterGain)gain.connect(timerMasterGain);
+      else gain.connect(audioCtx.destination);
       osc.start(now);
       osc.stop(now+dur+.02);
     }catch{}
+  }
+
+  function playHtmlRecorded(name){
+    if(!sound)return false;
+    const url=recordedDataUrls[name];
+    if(!url)return false;
+    try{
+      configureTimerAudioSession();
+      const audio=new Audio(url);
+      audio.preload='auto';
+      audio.playsInline=true;
+      audio.volume=1;
+      audio.addEventListener('ended',()=>releaseTimerAudioSession(),{once:true});
+      const p=audio.play();
+      if(p?.catch)p.catch(()=>{});
+      return true;
+    }catch{return false}
   }
 
   function playRecorded(name,volume=1){
@@ -1051,22 +1115,30 @@ h1{font-size:36px;margin:6px 0 0}
     configureTimerAudioSession();
     ensureAudio();
     const buffer=recordedSounds[name];
+
     if(!buffer){
       loadRecordedSounds();
-      fallbackTimerTone(name,.20);
+      if(playHtmlRecorded(name))return true;
+      fallbackTimerTone(name,.30);
+      setTimeout(releaseTimerAudioSession,700);
       return !!audioCtx;
     }
+
     try{
       const src=audioCtx.createBufferSource();
       const gain=audioCtx.createGain();
       src.buffer=buffer;
-      gain.gain.value=Math.max(0,Math.min(1.15,volume));
+      gain.gain.value=Math.max(.95,Math.min(1.25,volume));
       src.connect(gain);
-      gain.connect(audioCtx.destination);
+      if(timerMasterGain)gain.connect(timerMasterGain);
+      else gain.connect(audioCtx.destination);
+      src.onended=()=>releaseTimerAudioSession();
       src.start();
       return true;
     }catch{
-      fallbackTimerTone(name,.20);
+      if(playHtmlRecorded(name))return true;
+      fallbackTimerTone(name,.30);
+      setTimeout(releaseTimerAudioSession,700);
       return !!audioCtx;
     }
   }
@@ -1907,6 +1979,15 @@ h1{font-size:36px;margin:6px 0 0}
     show('screen');renderCards();
   });
 
+  $('testSoundBtn').addEventListener('click',async()=>{
+    sound=true;
+    $('soundToggle').checked=true;
+    savePrefs();
+    await unlockSignals();
+    playSignal('workStart');
+    setTimeout(()=>playSignal('workEnd'),1100);
+  });
+
   $('soundToggle').checked=sound;
   $('vibrateToggle').checked=vibrate;
   $('soundToggle').addEventListener('change',async e=>{sound=e.target.checked;savePrefs();if(sound){await unlockSignals();playSignal('ready')}});
@@ -1934,6 +2015,10 @@ h1{font-size:36px;margin:6px 0 0}
   window.visualViewport?.addEventListener('resize',syncViewportHeight);
 
   document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden){
+      configureTimerAudioSession();
+      ensureAudio();
+    }
     if(!document.hidden && pendingFinishCue && active)playFinishSequence();
     if(!document.hidden && active){
       if(running){
