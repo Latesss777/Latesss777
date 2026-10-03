@@ -49,7 +49,6 @@
   let vibrate = !!prefs.vibrate;
 
   const audio = window.PulseAudioEngine.create({ isEnabled: () => sound });
-  const unlockSignals = () => audio.unlock();
   const playSignal = kind => audio.playSignal(kind);
   const softTick = () => audio.playSignal('countdown');
   const startBackgroundKeeper = () => audio.startCarrier();
@@ -543,7 +542,6 @@
   }
 
   async function startWorkout(w){
-    await unlockSignals();
     active=normalize(w);
     phases=buildPhases(active);
     if(!phases.length) return;
@@ -923,7 +921,6 @@
       if(remainingMs<=0) remainingMs=phases[phaseIndex].duration*1000;
       deadline=Date.now()+remainingMs;
       running=true;
-      unlockSignals();
       startBackgroundKeeper();
       holdWakeLock();
     }
@@ -970,22 +967,20 @@
     show('screen');renderCards();
   });
 
-  $('testSoundBtn').addEventListener('click',async()=>{
+  $('testSoundBtn').addEventListener('click',()=>{
     sound=true;
     $('soundToggle').checked=true;
     savePrefs();
-    await unlockSignals();
     playSignal('workStart');
     setTimeout(()=>playSignal('workEnd'),1100);
   });
 
   $('soundToggle').checked=sound;
   $('vibrateToggle').checked=vibrate;
-  $('soundToggle').addEventListener('change',async e=>{
+  $('soundToggle').addEventListener('change',e=>{
     sound=e.target.checked;
     savePrefs();
     if(sound){
-      await unlockSignals();
       playSignal('countdown');
     }else{
       stopBackgroundKeeper();
