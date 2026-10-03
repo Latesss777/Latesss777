@@ -39,9 +39,9 @@ jobs:
       - name: Install browser test runtime
         run: |
           npm install --no-save playwright@1.55.0
-          npx playwright install --with-deps chromium
+          npx playwright install --with-deps webkit
 
-      - name: Run iPhone-sized browser regression
+      - name: Run iPhone-sized WebKit regression
         run: node pulse-timer/tests/browser.e2e.mjs
 
       - name: Upload browser artifact
