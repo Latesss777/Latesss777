@@ -11,10 +11,54 @@ const sounds = {
   workEnd: fs.readFileSync('pulse-timer/sounds/end_bell.b64','utf8').trim(),
 };
 
+const os = require('os');
+const path = require('path');
+const { execFileSync } = require('child_process');
+
+const signalReport = {};
 for (const [name,b64] of Object.entries(sounds)) {
   if (b64.length < 1000) throw new Error(name+' sound is unexpectedly small');
   const head = b64.slice(0,96);
   if (!html.includes(head)) throw new Error(name+' is not embedded in index.html');
+
+  const bytes = Buffer.from(b64,'base64');
+  if (bytes.length < 700) throw new Error(name+' decoded audio is unexpectedly small');
+  const tmp = path.join(os.tmpdir(),'pulse-'+name+'.mp3');
+  fs.writeFileSync(tmp,bytes);
+
+  const duration = Number(execFileSync('ffprobe',[
+    '-v','error',
+    '-show_entries','format=duration',
+    '-of','default=noprint_wrappers=1:nokey=1',
+    tmp
+  ],{encoding:'utf8'}).trim());
+  if (!(duration > 0.05 && duration < 15)) {
+    throw new Error(name+' has invalid duration: '+duration);
+  }
+
+  let analysis = '';
+  try {
+    execFileSync('ffmpeg',[
+      '-hide_banner','-nostats','-i',tmp,
+      '-af','volumedetect','-f','null','-'
+    ],{encoding:'utf8',stdio:['ignore','pipe','pipe']});
+  } catch (err) {
+    analysis = String(err.stderr || '');
+  }
+  const maxMatch = analysis.match(/max_volume:\s*(-?[0-9.]+) dB/);
+  const meanMatch = analysis.match(/mean_volume:\s*(-?[0-9.]+) dB/);
+  const maxDb = maxMatch ? Number(maxMatch[1]) : NaN;
+  const meanDb = meanMatch ? Number(meanMatch[1]) : NaN;
+  if (!Number.isFinite(maxDb) || maxDb < -55) {
+    throw new Error(name+' appears silent or undecodable; max_volume='+maxDb);
+  }
+  signalReport[name] = {
+    base64: b64.length,
+    bytes: bytes.length,
+    duration: Number(duration.toFixed(3)),
+    maxDb,
+    meanDb
+  };
 }
 
 const required = [
@@ -41,7 +85,7 @@ if (/fetch\(path\s*,/.test(html)) {
 
 console.log('Pulse Timer static audio tests: PASS');
 console.log(JSON.stringify({
-  embeddedSounds: Object.fromEntries(Object.entries(sounds).map(([k,v])=>[k,v.length])),
+  embeddedSounds: signalReport,
   transientSession: true,
   finishSequence: true,
   mediaSessionTakeover: false,
