@@ -76,15 +76,17 @@
     }
 
     async function releaseAudibleCueSession() {
-      try {
-        if (context?.state === 'running') {
-          await Promise.race([
-            context.suspend(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('suspend timeout')), RESUME_TIMEOUT_MS))
-          ]);
+      if (!carrier) {
+        try {
+          if (context?.state === 'running') {
+            await Promise.race([
+              context.suspend(),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('suspend timeout')), RESUME_TIMEOUT_MS))
+            ]);
+          }
+        } catch (error) {
+          recordError(error, 'suspend after cue');
         }
-      } catch (error) {
-        recordError(error, 'suspend after cue');
       }
 
       if (!('audioSession' in navigator)) return;
@@ -246,14 +248,16 @@
     async function playBuffer(buffer, volume = 1) {
       if (!isEnabled() || !buffer) return false;
 
-      // A cue owns the audio session from category activation until the source
-      // ends. Between cues the context stays suspended.
-      try {
-        if (context?.state === 'running') {
-          await context.suspend();
+      // During an active workout the carrier keeps WebAudio alive in the
+      // background. Do not suspend it before a cue.
+      if (!carrier) {
+        try {
+          if (context?.state === 'running') {
+            await context.suspend();
+          }
+        } catch (error) {
+          recordError(error, 'pre-cue suspend');
         }
-      } catch (error) {
-        recordError(error, 'pre-cue suspend');
       }
 
       await activateAudibleCueSession();
@@ -331,18 +335,50 @@
     }
 
     async function startCarrier() {
-      // Deliberately disabled. A continuous carrier keeps the WebAudio session
-      // active and prevents Music/Spotify from recovering between timer cues.
-      return true;
+      if (!isEnabled()) return false;
+      configureMixingSession();
+      if (!(await resumeContext())) return false;
+      await decodeCues();
+      if (carrier) return true;
+
+      try {
+        carrier = context.createOscillator();
+        carrierGain = context.createGain();
+        carrier.type = 'sine';
+        carrier.frequency.value = CARRIER_FREQUENCY_HZ;
+        carrierGain.gain.value = CARRIER_GAIN;
+        carrier.connect(carrierGain);
+        carrierGain.connect(context.destination);
+        carrier.start();
+        lastError = '';
+        return true;
+      } catch (error) {
+        carrier = null;
+        carrierGain = null;
+        recordError(error, 'background carrier');
+        return false;
+      }
     }
 
-    function stopCarrier() {}
+    function stopCarrier() {
+      try { carrier?.stop(); } catch {}
+      try { carrier?.disconnect(); } catch {}
+      try { carrierGain?.disconnect(); } catch {}
+      carrier = null;
+      carrierGain = null;
+      configureMixingSession();
+      if (context?.state === 'running') {
+        context.suspend().catch(()=>{});
+      }
+    }
 
     async function onVisibilityChange(hidden) {
       if (hidden) return;
       configureMixingSession();
       await resumeContext();
-      try { if (context?.state === 'running') await context.suspend(); } catch {}
+      if (!carrier) {
+        try { if (context?.state === 'running') await context.suspend(); } catch {}
+      }
     }
 
     function bindGestureUnlock(target = document) {
