@@ -52,15 +52,11 @@ h1,h2,h3,.phase-title,.card-live-title{font-weight:760;letter-spacing:-.035em}
 /* Keep the content layer quiet so the control layer can read as glass. */
 .screen{
   background:
-    radial-gradient(70% 48% at 10% -10%,rgba(73,91,122,.18),transparent 65%),
-    radial-gradient(64% 48% at 100% 96%,rgba(49,62,91,.14),transparent 68%),
-    linear-gradient(180deg,#08090c 0%,#050609 54%,#030407 100%);
+    radial-gradient(circle at 16% 8%,#242424 0,transparent 34%),
+    radial-gradient(circle at 84% 90%,#171717 0,transparent 38%),
+    #050505;
 }
-.editor{
-  background:
-    radial-gradient(62% 40% at 100% 0%,rgba(57,72,103,.14),transparent 66%),
-    var(--pt-bg);
-}
+.editor{background:#050505}
 .topbar,.settings,.cards{width:min(100%,620px);margin-left:auto;margin-right:auto}
 .editor>*,.timer-shell{max-width:620px;margin-left:auto;margin-right:auto}
 
@@ -391,7 +387,7 @@ h1,h2,h3,.phase-title,.card-live-title{font-weight:760;letter-spacing:-.035em}
 }
 
 /* Timer: static, calm gradients. No pulsing/glow animation. */
-.timer{background:#0b121b}
+.timer{background:#050505}
 .phase-bg{inset:0;filter:none;transform:none}
 .phase-bg:before,.phase-bg:after{
   animation:none!important;
@@ -399,9 +395,9 @@ h1,h2,h3,.phase-title,.card-live-title{font-weight:760;letter-spacing:-.035em}
   filter:blur(62px) saturate(108%);
   opacity:.36;
 }
-.phase-bg.prep{--phase:#163326;--a:#44765d;--b:#183e2b;--c:#6a907d}
-.phase-bg.work{--phase:#0a5d87;--a:#5ba9ce;--b:#0b5f8b;--c:#85bdd4}
-.phase-bg.rest{--phase:#152039;--a:#536a9c;--b:#1d2d54;--c:#7d91ba}
+.phase-bg.prep{--a:#aaff1f;--b:#24da50;--c:#d9ff72;--phase:#10361a}
+.phase-bg.work{--a:#9befff;--b:#2db8ee;--c:#c8f7ff;--phase:#168fc5}
+.phase-bg.rest{--a:#5575ff;--b:#7352dd;--c:#a8ddff;--phase:#0b1631}
 .timer-shell{padding-left:16px;padding-right:16px}
 .timer-head{grid-template-columns:50px minmax(0,1fr) 50px;gap:10px}
 .timer-head .icon-btn{width:50px;height:50px;background:var(--pt-glass-fill)}
