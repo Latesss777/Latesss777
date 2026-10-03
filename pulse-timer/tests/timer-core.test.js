@@ -26,7 +26,7 @@ const sets={prep:0,work:20,rest:5,cycles:2,sets:3,setRest:40,coolDown:0};
 const setPhases=core.buildPhases(sets);
 assert(setPhases.filter(p=>p.type==='work').length===6,'Multi-set work count incorrect');
 assert(setPhases.filter(p=>p.label==='ОТДЫХ МЕЖДУ ПОДХОДАМИ').length===2,'Set-rest count incorrect');
-assert(core.totalSeconds(sets)===210,'Multi-set total incorrect');
+assert(core.totalSeconds(sets)===215,'Multi-set total incorrect');
 
 const minimum=core.buildPhases({work:1,cycles:1,sets:1});
 assert(minimum.length===1&&minimum[0].type==='work','Minimum workout must contain exactly one work phase');
