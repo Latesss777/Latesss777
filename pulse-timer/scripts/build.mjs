@@ -22,6 +22,7 @@ for(const [token,value] of Object.entries(soundMap)) audio=audio.replace(token,v
 
 const js=[
   audio,
+  read('src/core/timer-core.js'),
   read('src/app/app.js')
 ].join('\n\n');
 
