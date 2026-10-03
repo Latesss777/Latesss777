@@ -109,13 +109,18 @@ dims=await overflow();
 assert(dims.html<=dims.width+1&&dims.body<=dims.width+1,'Timer has horizontal overflow');
 
 await page.waitForFunction(
-  previous=>((window.__pulseAudioDiagnostics?.status?.cueCount||0)>previous),
+  previous=>{
+    const status=window.__pulseAudioDiagnostics?.status;
+    return !!status &&
+      status.lastCue==='workEnd' &&
+      (status.cueCount||0)>=previous+3;
+  },
   audioStatus.cueCount||0,
-  {timeout:9000}
+  {timeout:12000}
 );
 const finished=await page.evaluate(()=>window.__pulseAudioDiagnostics?.status);
 assert(finished?.lastCue==='workEnd','Final workout sound was not requested');
-assert((finished?.cueCount||0)>(audioStatus.cueCount||0),'Workout did not complete an additional timer cue: '+JSON.stringify(finished));
+assert((finished?.cueCount||0)>=(audioStatus.cueCount||0)+3,'Workout did not complete countdown, start and finish cues: '+JSON.stringify(finished));
 assert(!finished?.lastError,'Audio engine ended with an error: '+String(finished?.lastError||''));
 
 fs.mkdirSync(path.join(root,'test-artifacts'),{recursive:true});
