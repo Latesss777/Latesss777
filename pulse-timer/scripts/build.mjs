@@ -14,9 +14,9 @@ const css=[
 
 let audio=read('src/audio/audio-engine.js');
 const soundMap={
-  '__COUNTDOWN_B64__':read('sounds/countdown.b64').trim().replace(/\\s+/g,''),
-  '__WORK_START_B64__':read('sounds/start_whistle.b64').trim().replace(/\\s+/g,''),
-  '__WORK_END_B64__':read('sounds/end_bell.b64').trim().replace(/\\s+/g,'')
+  '__COUNTDOWN_B64__':read('sounds/countdown.b64').trim().replace(/\s+/g,''),
+  '__WORK_START_B64__':read('sounds/start_whistle.b64').trim().replace(/\s+/g,''),
+  '__WORK_END_B64__':read('sounds/end_bell.b64').trim().replace(/\s+/g,'')
 };
 for(const [token,value] of Object.entries(soundMap)) audio=audio.replace(token,value);
 
