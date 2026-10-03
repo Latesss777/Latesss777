@@ -450,7 +450,6 @@
 
   function workoutShareUrl(w){
     const u=new URL('https://pulse-timer-matvey-v2.onrender.com/');
-    u.searchParams.set('v','1215');
     u.searchParams.set('workout',encodeWorkout(w));
     return u.toString();
   }
@@ -529,9 +528,7 @@
     if(idx>=0) workouts[idx]=clean; else workouts.unshift(clean);
     editing=clean;
     saveWorkouts();
-    document.addEventListener('pointerdown',()=>{unlockSignals()},{once:true,capture:true});
-  document.addEventListener('touchstart',()=>{unlockSignals()},{once:true,capture:true,passive:true});
-  renderCards();
+    renderCards();
   }
 
   function openPad(key){
