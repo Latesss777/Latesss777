@@ -6,6 +6,8 @@ pulse-timer/
     template.html
     audio/
       audio-engine.js
+    core/
+      timer-core.js
     app/
       app.js
     styles/
@@ -26,7 +28,8 @@ pulse-timer/
 ## Runtime layers
 
 - **Audio engine**: owns AudioContext, signal decoding, gain/limiting, iOS audio-session strategy, recovery, and diagnostics.
-- **App/timer**: owns workouts, timer phases, persistence, editor, sharing, gestures, and screen state.
+- **Timer core**: pure phase construction and duration math; no DOM, storage, sound, or CSS.
+- **App/UI**: owns workouts, persistence, editor, sharing, gestures, and screen orchestration.
 - **Styles**: base layout is separate from the Liquid Glass material layer.
 - **Build**: inlines source files into a single `index.html` because the current Render service publishes only that artifact.
 
