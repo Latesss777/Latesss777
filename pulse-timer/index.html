@@ -775,11 +775,23 @@ h1{font-size:36px;margin:6px 0 0}
 
   function saveWorkouts(){localStorage.setItem(STORAGE,JSON.stringify(workouts))}
   function savePrefs(){localStorage.setItem(PREFS,JSON.stringify({sound,vibrate}))}
-  function ensureAudio(){
-    if(!audioCtx){
-      try{audioCtx=new (window.AudioContext||window.webkitAudioContext)()}catch{}
+  function configureTimerAudioSession(){
+    if('audioSession' in navigator){
+      try{navigator.audioSession.type='ambient'}catch{}
     }
-    if(audioCtx?.state==='suspended') audioCtx.resume().catch(()=>{});
+  }
+
+  function ensureAudio(){
+    configureTimerAudioSession();
+    if(!audioCtx){
+      try{
+        const Ctx=window.AudioContext||window.webkitAudioContext;
+        audioCtx=new Ctx({latencyHint:'interactive'});
+      }catch{
+        try{audioCtx=new (window.AudioContext||window.webkitAudioContext)()}catch{}
+      }
+    }
+    if(audioCtx?.state==='suspended')audioCtx.resume().catch(()=>{});
   }
 
   const RECORDED_SOUND_FILES={
@@ -791,73 +803,121 @@ h1{font-size:36px;margin:6px 0 0}
   let recordedSoundsPromise=null;
   let signalsUnlocked=false;
 
-  function base64AudioUrl(base64){
-    const raw=atob(String(base64||'').trim());
+  function base64ToArrayBuffer(base64){
+    const raw=atob(String(base64||'').replace(/\s+/g,''));
     const bytes=new Uint8Array(raw.length);
     for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
-    return URL.createObjectURL(new Blob([bytes],{type:'audio/mpeg'}));
+    return bytes.buffer;
+  }
+
+  function decodeTimerAudio(arrayBuffer){
+    return new Promise((resolve,reject)=>{
+      let settled=false;
+      const ok=value=>{if(!settled){settled=true;resolve(value)}};
+      const fail=err=>{if(!settled){settled=true;reject(err)}};
+      try{
+        const result=audioCtx.decodeAudioData(arrayBuffer.slice(0),ok,fail);
+        if(result?.then)result.then(ok).catch(fail);
+      }catch(err){fail(err)}
+    });
   }
 
   function loadRecordedSounds(){
     if(recordedSoundsPromise)return recordedSoundsPromise;
+    ensureAudio();
     recordedSoundsPromise=Promise.all(
       Object.entries(RECORDED_SOUND_FILES).map(async([name,path])=>{
-        const res=await fetch(path,{cache:'force-cache'});
-        if(!res.ok)throw new Error('Sound '+name+' failed: '+res.status);
-        const audio=new Audio(base64AudioUrl(await res.text()));
-        audio.preload='auto';
-        audio.playsInline=true;
-        audio.volume=1;
-        recordedSounds[name]=audio;
-        try{audio.load()}catch{}
+        try{
+          const res=await fetch(path,{cache:'no-cache'});
+          if(!res.ok)throw new Error('HTTP '+res.status);
+          recordedSounds[name]=await decodeTimerAudio(base64ToArrayBuffer(await res.text()));
+        }catch(err){
+          console.warn('Timer sound failed:',name,err);
+        }
       })
-    ).catch(err=>console.warn('Recorded timer sounds unavailable',err));
+    );
     return recordedSoundsPromise;
   }
 
   async function unlockSignals(){
+    configureTimerAudioSession();
     ensureAudio();
     try{if(audioCtx?.state==='suspended')await audioCtx.resume()}catch{}
     await loadRecordedSounds();
-    if(signalsUnlocked)return;
-    signalsUnlocked=true;
-    for(const audio of Object.values(recordedSounds)){
-      try{
-        audio.volume=.001;
-        audio.currentTime=0;
-        const p=audio.play();
-        if(p?.then)await p.catch(()=>{});
-        audio.pause();
-        audio.currentTime=0;
-        audio.volume=1;
-      }catch{}
-    }
+    signalsUnlocked=!!audioCtx;
+  }
+
+  function fallbackTimerTone(name,volume=.22){
+    ensureAudio();
+    if(!audioCtx)return;
+    try{
+      const now=audioCtx.currentTime;
+      const gain=audioCtx.createGain();
+      const osc=audioCtx.createOscillator();
+      osc.type='sine';
+      let dur=.10;
+
+      if(name==='countdown'){
+        osc.frequency.setValueAtTime(880,now);
+        dur=.10;
+      }else if(name==='workStart'){
+        osc.frequency.setValueAtTime(760,now);
+        osc.frequency.exponentialRampToValueAtTime(1320,now+.42);
+        dur=.48;
+      }else{
+        osc.frequency.setValueAtTime(920,now);
+        osc.frequency.exponentialRampToValueAtTime(620,now+.38);
+        dur=.52;
+      }
+
+      gain.gain.setValueAtTime(.0001,now);
+      gain.gain.exponentialRampToValueAtTime(Math.max(.02,volume),now+.008);
+      gain.gain.exponentialRampToValueAtTime(.0001,now+dur);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now+dur+.02);
+    }catch{}
   }
 
   function playRecorded(name,volume=1){
     if(!sound)return;
-    const src=recordedSounds[name];
-    if(!src){loadRecordedSounds();return}
+    configureTimerAudioSession();
+    ensureAudio();
+    const buffer=recordedSounds[name];
+    if(!buffer){
+      loadRecordedSounds();
+      fallbackTimerTone(name,.20);
+      return;
+    }
     try{
-      const audio=src.cloneNode(true);
-      audio.volume=Math.max(0,Math.min(1,volume));
-      audio.currentTime=0;
-      const p=audio.play();
-      if(p?.catch)p.catch(()=>{});
-    }catch{}
+      const src=audioCtx.createBufferSource();
+      const gain=audioCtx.createGain();
+      src.buffer=buffer;
+      gain.gain.value=Math.max(0,Math.min(1.15,volume));
+      src.connect(gain);
+      gain.connect(audioCtx.destination);
+      src.start();
+    }catch{
+      fallbackTimerTone(name,.20);
+    }
   }
 
   function pulseTimerBackground(){ /* disabled by design */ }
 
   function softTick(){
-    playRecorded('countdown',.92);
+    playRecorded('countdown',1);
   }
 
   async function playSignal(kind){
     if(!sound)return;
-    await loadRecordedSounds();
+    configureTimerAudioSession();
+    ensureAudio();
+    if(audioCtx?.state==='suspended'){
+      try{await audioCtx.resume()}catch{}
+    }
     if(kind==='preStart'){
-      playRecorded('countdown',.92);
+      playRecorded('countdown',1);
       return;
     }
     if(kind==='workStart'){
@@ -868,7 +928,6 @@ h1{font-size:36px;margin:6px 0 0}
       playRecorded('workEnd',1);
       return;
     }
-    /* ready intentionally has no sound */
   }
 
   function makeBackgroundKeeperWav(){
@@ -886,96 +945,17 @@ h1{font-size:36px;margin:6px 0 0}
     return URL.createObjectURL(new Blob([bytes],{type:'audio/wav'}));
   }
 
-  function setupMediaActions(){
-    if(!('mediaSession' in navigator)) return;
-    const safe=(action,handler)=>{
-      try{navigator.mediaSession.setActionHandler(action,handler)}catch{}
-    };
-    safe('play',()=>{
-      if(active&&!running) $('pauseBtn')?.click();
-    });
-    safe('pause',()=>{
-      if(active&&running) $('pauseBtn')?.click();
-    });
-    safe('previoustrack',()=>{
-      if(active) previousPhase();
-    });
-    safe('nexttrack',()=>{
-      if(active&&phaseIndex<phases.length-1) nextPhase(false);
-    });
-  }
+  function setupMediaActions(){ /* intentionally disabled */ }
 
-  function updateMediaCenter(force=false){
-    if(!active||!phases.length||!('mediaSession' in navigator)) return;
-    const p=phases[phaseIndex];
-    if(!p) return;
-
-    const sec=Math.max(0,Math.ceil(remainingMs/1000));
-    const key=[phaseIndex,p.type,p.set,p.cycle,running].join('|');
-    if(!force && sec===lastMediaSecond && key===lastMediaKey) return;
-    lastMediaSecond=sec;
-    lastMediaKey=key;
-
-    const phaseName=p.type==='work'?'РАБОТА':
-      p.type==='rest'?'ОТДЫХ':
-      p.type==='setRest'?'ОТДЫХ МЕЖДУ ПОДХОДАМИ':
-      p.type==='prep'?'ПОДГОТОВКА':
-      p.type==='coolDown'?'ЗАВЕРШЕНИЕ':
-      String(p.label||'ТРЕНИРОВКА').toUpperCase();
-
-    const cycleText=p.cycle>0?' · Цикл '+Math.max(1,p.cycle)+'/'+active.cycles:'';
-    const setText='Подход '+p.set+'/'+active.sets;
-
-    try{
-      navigator.mediaSession.metadata=new MediaMetadata({
-        title:phaseName+' · '+fmt(sec),
-        artist:setText+cycleText,
-        album:active.name
-      });
-      navigator.mediaSession.playbackState=running?'playing':'paused';
-
-      if(typeof navigator.mediaSession.setPositionState==='function' && p.duration>0){
-        const elapsed=Math.max(0,Math.min(p.duration-.01,p.duration-remainingMs/1000));
-        navigator.mediaSession.setPositionState({
-          duration:p.duration,
-          playbackRate:1,
-          position:elapsed
-        });
-      }
-    }catch{}
-  }
+  function updateMediaCenter(){ /* intentionally disabled */ }
 
   async function startBackgroundKeeper(){
-    try{
-      if(!backgroundKeeper){
-        backgroundKeeper=new Audio(makeBackgroundKeeperWav());
-        backgroundKeeper.loop=true;
-        backgroundKeeper.preload='auto';
-        backgroundKeeper.playsInline=true;
-        backgroundKeeper.volume=1;
-      }
-      setupMediaActions();
-      await backgroundKeeper.play().catch(()=>{});
-      updateMediaCenter(true);
-    }catch{}
+    configureTimerAudioSession();
   }
 
-  function pauseBackgroundKeeper(){
-    try{backgroundKeeper?.pause()}catch{}
-    try{
-      if('mediaSession' in navigator)navigator.mediaSession.playbackState='paused';
-      updateMediaCenter(true);
-    }catch{}
-  }
+  function pauseBackgroundKeeper(){}
 
   function stopBackgroundKeeper(){
-    try{if(backgroundKeeper){backgroundKeeper.pause();backgroundKeeper.currentTime=0}}catch{}
-    try{
-      if('mediaSession' in navigator){
-        navigator.mediaSession.playbackState='none';
-        navigator.mediaSession.metadata=null;
-      }
-    }catch{}
     lastMediaSecond=null;
     lastMediaKey='';
   }
@@ -1773,6 +1753,7 @@ h1{font-size:36px;margin:6px 0 0}
     }
   });
 
+  configureTimerAudioSession();
   loadRecordedSounds();
   importSharedWorkout();
   renderCards();
