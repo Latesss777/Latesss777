@@ -14,7 +14,7 @@
   });
 
   const RESUME_TIMEOUT_MS = 500;
-  const MASTER_GAIN = 2.2;
+  const MASTER_GAIN = 3.25;
   const CARRIER_FREQUENCY_HZ = 18;
   const CARRIER_GAIN = 0.000008;
 
@@ -48,11 +48,35 @@
     function configureMixingSession() {
       if (!('audioSession' in navigator)) return;
       try {
-        // AudioContext is ambient by default. Keep the explicit value stable:
-        // HTMLMediaElement/playback is intentionally never used by this engine.
         navigator.audioSession.type = 'ambient';
       } catch (error) {
-        recordError(error, 'audioSession');
+        recordError(error, 'audioSession idle');
+      }
+    }
+
+    async function activateAudibleCueSession() {
+      if (!('audioSession' in navigator)) return;
+      try {
+        // iOS mutes ambient/transient sessions when the Ring/Silent switch is on.
+        // Force a real category transition for every cue. Cycling through ambient
+        // also works around WebKit sessions whose cached playback category went stale.
+        if (navigator.audioSession.type === 'playback') {
+          navigator.audioSession.type = 'ambient';
+          await new Promise(resolve => setTimeout(resolve, 0));
+        }
+        navigator.audioSession.type = 'playback';
+      } catch (error) {
+        recordError(error, 'audioSession cue');
+      }
+    }
+
+    function releaseAudibleCueSession() {
+      if (!('audioSession' in navigator)) return;
+      try {
+        // Return ownership immediately so Music/Spotify can resume after the cue.
+        navigator.audioSession.type = 'ambient';
+      } catch (error) {
+        recordError(error, 'audioSession release');
       }
     }
 
@@ -204,13 +228,19 @@
     async function playBuffer(buffer, volume = 1) {
       if (!isEnabled() || !buffer) return false;
       if (!(await resumeContext())) return false;
+      await activateAudibleCueSession();
       try {
         const source = context.createBufferSource();
         source.buffer = buffer;
-        if (!connectSource(source, volume)) return false;
+        if (!connectSource(source, volume)) {
+          releaseAudibleCueSession();
+          return false;
+        }
+        source.addEventListener('ended', releaseAudibleCueSession, { once: true });
         source.start();
         return true;
       } catch (error) {
+        releaseAudibleCueSession();
         recordError(error, 'play buffer');
         return false;
       }
