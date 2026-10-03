@@ -293,20 +293,7 @@
     return fired;
   }
 
-  function buildPhases(w){
-    const out=[];
-    if(w.prep>0) out.push({label:'ПОДГОТОВКА',duration:w.prep,type:'prep',set:1,cycle:0});
-    for(let s=1;s<=w.sets;s++){
-      for(let c=1;c<=w.cycles;c++){
-        out.push({label:'РАБОТА',duration:w.work,type:'work',set:s,cycle:c});
-        if(c<w.cycles && w.rest>0) out.push({label:'ОТДЫХ',duration:w.rest,type:'rest',set:s,cycle:c});
-      }
-      if(s<w.sets && w.setRest>0) out.push({label:'ОТДЫХ МЕЖДУ ПОДХОДАМИ',duration:w.setRest,type:'rest',set:s,cycle:w.cycles});
-    }
-    if(w.coolDown>0) out.push({label:'ЗАМИНКА',duration:w.coolDown,type:'rest',set:w.sets,cycle:w.cycles});
-    return out;
-  }
-  function totalSeconds(w){return buildPhases(w).reduce((a,p)=>a+p.duration,0)}
+  const {buildPhases,totalSeconds}=window.PulseTimerCore;
 
   function show(id){
     ['screen','editor','timer'].forEach(x=>$(x).classList.add('hidden'));
