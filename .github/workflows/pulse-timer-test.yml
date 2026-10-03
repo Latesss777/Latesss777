@@ -9,19 +9,45 @@ on:
   pull_request:
     paths:
       - 'pulse-timer/**'
+      - '.github/workflows/pulse-timer-test.yml'
 
 jobs:
-  audio-static-tests:
+  regression:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '24'
+
       - name: Install audio tools
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
+
+      - name: Verify generated build
+        run: node pulse-timer/tests/structure.test.js
+
       - name: Verify timer audio pipeline
         run: node pulse-timer/test-audio.js
+
+      - name: Verify Liquid Glass design rules
+        run: node pulse-timer/tests/design-static.test.js
+
+      - name: Install browser test runtime
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Run iPhone-sized browser regression
+        run: node pulse-timer/tests/browser.e2e.mjs
+
+      - name: Upload browser artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulse-timer-browser-check
+          path: pulse-timer/test-artifacts/
+          if-no-files-found: ignore
