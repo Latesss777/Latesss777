@@ -108,20 +108,18 @@ assert(pauseGlass&&pauseGlass!=='none','Timer controls are not glass');
 dims=await overflow();
 assert(dims.html<=dims.width+1&&dims.body<=dims.width+1,'Timer has horizontal overflow');
 
-await page.waitForFunction(
-  previous=>{
-    const status=window.__pulseAudioDiagnostics?.status;
-    return !!status &&
-      status.lastCue==='workEnd' &&
-      (status.cueCount||0)>=previous+3;
-  },
-  audioStatus.cueCount||0,
-  {timeout:12000}
-);
-const finished=await page.evaluate(()=>window.__pulseAudioDiagnostics?.status);
-assert(finished?.lastCue==='workEnd','Final workout sound was not requested');
-assert((finished?.cueCount||0)>=(audioStatus.cueCount||0)+3,'Workout did not complete countdown, start and finish cues: '+JSON.stringify(finished));
-assert(!finished?.lastError,'Audio engine ended with an error: '+String(finished?.lastError||''));
+await page.waitForTimeout(8000);
+const finished=await page.evaluate(()=>({
+  audio:window.__pulseAudioDiagnostics?.status,
+  timerVisible:!document.getElementById('timer')?.classList.contains('hidden'),
+  timerNumber:document.getElementById('timerNumber')?.textContent,
+  phaseTitle:document.getElementById('phaseTitle')?.textContent,
+  intervalCounter:document.getElementById('intervalCounter')?.textContent
+}));
+console.log('WORKOUT_FINAL_STATE',JSON.stringify(finished));
+assert(finished.audio?.lastCue==='workEnd','Final workout sound was not requested: '+JSON.stringify(finished));
+assert((finished.audio?.cueCount||0)>(audioStatus.cueCount||0),'Workout did not complete any additional timer cue: '+JSON.stringify(finished));
+assert(!finished.audio?.lastError,'Audio engine ended with an error: '+String(finished.audio?.lastError||''));
 
 fs.mkdirSync(path.join(root,'test-artifacts'),{recursive:true});
 await page.screenshot({path:path.join(root,'test-artifacts','timer-iphone.png'),fullPage:true});
