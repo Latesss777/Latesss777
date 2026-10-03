@@ -782,119 +782,93 @@ h1{font-size:36px;margin:6px 0 0}
     if(audioCtx?.state==='suspended') audioCtx.resume().catch(()=>{});
   }
 
+  const RECORDED_SOUND_FILES={
+    countdown:'sounds/countdown.b64',
+    workStart:'sounds/start_whistle.b64',
+    workEnd:'sounds/end_bell.b64'
+  };
+  const recordedSounds={};
+  let recordedSoundsPromise=null;
   let signalsUnlocked=false;
+
+  function base64AudioUrl(base64){
+    const raw=atob(String(base64||'').trim());
+    const bytes=new Uint8Array(raw.length);
+    for(let i=0;i<raw.length;i++)bytes[i]=raw.charCodeAt(i);
+    return URL.createObjectURL(new Blob([bytes],{type:'audio/mpeg'}));
+  }
+
+  function loadRecordedSounds(){
+    if(recordedSoundsPromise)return recordedSoundsPromise;
+    recordedSoundsPromise=Promise.all(
+      Object.entries(RECORDED_SOUND_FILES).map(async([name,path])=>{
+        const res=await fetch(path,{cache:'force-cache'});
+        if(!res.ok)throw new Error('Sound '+name+' failed: '+res.status);
+        const audio=new Audio(base64AudioUrl(await res.text()));
+        audio.preload='auto';
+        audio.playsInline=true;
+        audio.volume=1;
+        recordedSounds[name]=audio;
+        try{audio.load()}catch{}
+      })
+    ).catch(err=>console.warn('Recorded timer sounds unavailable',err));
+    return recordedSoundsPromise;
+  }
 
   async function unlockSignals(){
     ensureAudio();
-    try{
-      if(audioCtx?.state==='suspended') await audioCtx.resume();
-      signalsUnlocked=!!audioCtx;
-    }catch{}
+    try{if(audioCtx?.state==='suspended')await audioCtx.resume()}catch{}
+    await loadRecordedSounds();
+    if(signalsUnlocked)return;
+    signalsUnlocked=true;
+    for(const audio of Object.values(recordedSounds)){
+      try{
+        audio.volume=.001;
+        audio.currentTime=0;
+        const p=audio.play();
+        if(p?.then)await p.catch(()=>{});
+        audio.pause();
+        audio.currentTime=0;
+        audio.volume=1;
+      }catch{}
+    }
   }
 
-  function warmNote(freq,{delay=0,dur=.18,gain=.20,slide=1}={}){
-    if(!sound) return;
-    ensureAudio();
-    if(!audioCtx) return;
-
+  function playRecorded(name,volume=1){
+    if(!sound)return;
+    const src=recordedSounds[name];
+    if(!src){loadRecordedSounds();return}
     try{
-      const t0=audioCtx.currentTime+delay;
-      const t1=t0+dur;
-
-      const bus=audioCtx.createGain();
-      const filter=audioCtx.createBiquadFilter();
-      const comp=audioCtx.createDynamicsCompressor();
-
-      filter.type='lowpass';
-      filter.frequency.setValueAtTime(1900,t0);
-      filter.Q.setValueAtTime(.55,t0);
-
-      comp.threshold.setValueAtTime(-18,t0);
-      comp.knee.setValueAtTime(16,t0);
-      comp.ratio.setValueAtTime(3,t0);
-      comp.attack.setValueAtTime(.004,t0);
-      comp.release.setValueAtTime(.12,t0);
-
-      bus.gain.setValueAtTime(.0001,t0);
-      bus.gain.exponentialRampToValueAtTime(Math.max(.001,gain),t0+.014);
-      bus.gain.setTargetAtTime(Math.max(.001,gain*.72),t0+.06,.055);
-      bus.gain.exponentialRampToValueAtTime(.0001,t1);
-
-      const sine=audioCtx.createOscillator();
-      const triangle=audioCtx.createOscillator();
-      sine.type='sine';
-      triangle.type='triangle';
-
-      sine.frequency.setValueAtTime(freq,t0);
-      triangle.frequency.setValueAtTime(freq,t0);
-      const endFreq=Math.max(90,freq*slide);
-      sine.frequency.exponentialRampToValueAtTime(endFreq,t1);
-      triangle.frequency.exponentialRampToValueAtTime(endFreq,t1);
-
-      const sineGain=audioCtx.createGain();
-      const triGain=audioCtx.createGain();
-      sineGain.gain.setValueAtTime(.82,t0);
-      triGain.gain.setValueAtTime(.18,t0);
-
-      sine.connect(sineGain);
-      triangle.connect(triGain);
-      sineGain.connect(bus);
-      triGain.connect(bus);
-      bus.connect(filter);
-      filter.connect(comp);
-      comp.connect(audioCtx.destination);
-
-      sine.start(t0);triangle.start(t0);
-      sine.stop(t1+.03);triangle.stop(t1+.03);
+      const audio=src.cloneNode(true);
+      audio.volume=Math.max(0,Math.min(1,volume));
+      audio.currentTime=0;
+      const p=audio.play();
+      if(p?.catch)p.catch(()=>{});
     }catch{}
   }
 
   function pulseTimerBackground(){ /* disabled by design */ }
 
-  function softTick(step=3){
-    const notes={3:293.66,2:329.63,1:369.99};
-    pulseTimerBackground(0,step===1?'strong':step===2?'medium':'soft');
-    warmNote(notes[step]||329.63,{dur:.075,gain:.105,slide:.985});
+  function softTick(){
+    playRecorded('countdown',.92);
   }
 
   async function playSignal(kind){
-    if(!sound) return;
-    await unlockSignals();
-    if(!audioCtx) return;
-
-    /* Start = rising fifth. End = descending third/fifth.
-       All tones stay in a warm mid range — no high-pitched beeps. */
+    if(!sound)return;
+    await loadRecordedSounds();
     if(kind==='preStart'){
-      pulseTimerBackground(0,'soft');
-      warmNote(293.66,{dur:.10,gain:.12,slide:1.01});
+      playRecorded('countdown',.92);
       return;
     }
     if(kind==='workStart'){
-      pulseTimerBackground(0,'medium');
-      pulseTimerBackground(.115,'strong');
-      warmNote(392.00,{dur:.16,gain:.19,slide:1.015});
-      warmNote(587.33,{delay:.115,dur:.22,gain:.23,slide:1.008});
+      playRecorded('workStart',1);
       return;
     }
-    if(kind==='workEnd'){
-      pulseTimerBackground(0,'medium');
-      pulseTimerBackground(.12,'soft');
-      warmNote(523.25,{dur:.16,gain:.18,slide:.992});
-      warmNote(329.63,{delay:.12,dur:.25,gain:.22,slide:.985});
+    if(kind==='workEnd'||kind==='finish'){
+      playRecorded('workEnd',1);
       return;
     }
-    if(kind==='finish'){
-      pulseTimerBackground(0,'soft');
-      pulseTimerBackground(.105,'medium');
-      pulseTimerBackground(.225,'strong');
-      warmNote(392.00,{dur:.14,gain:.16});
-      warmNote(523.25,{delay:.105,dur:.17,gain:.18});
-      warmNote(659.25,{delay:.225,dur:.26,gain:.21,slide:1.008});
-      return;
-    }
-    /* ready */
-    pulseTimerBackground(0,'soft');
-    warmNote(440.00,{dur:.16,gain:.14,slide:1.01});
+    /* ready intentionally has no sound */
   }
 
   function makeBackgroundKeeperWav(){
@@ -1404,9 +1378,8 @@ h1{font-size:36px;margin:6px 0 0}
         stopBackgroundKeeper();
         releaseWakeLock();
         if(over<1500){
-          if(previous?.type==='work'){playSignal('workEnd');haptic('workEnd')}
-          setTimeout(()=>playSignal('finish'),320);
-          setTimeout(()=>haptic('finish'),320);
+          playSignal('finish');
+          haptic('finish');
         }
         return;
       }
@@ -1449,12 +1422,8 @@ h1{font-size:36px;margin:6px 0 0}
       stopBackgroundKeeper();
       releaseWakeLock();
       if(auto){
-        if(prev?.type==='work'){
-          playSignal('workEnd');
-          haptic('workEnd');
-        }
-        setTimeout(()=>playSignal('finish'),460);
-        setTimeout(()=>haptic('finish'),460);
+        playSignal('finish');
+        haptic('finish');
       }
       return;
     }
@@ -1804,6 +1773,7 @@ h1{font-size:36px;margin:6px 0 0}
     }
   });
 
+  loadRecordedSounds();
   importSharedWorkout();
   renderCards();
 
