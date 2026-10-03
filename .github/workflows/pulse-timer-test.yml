@@ -30,6 +30,9 @@ jobs:
       - name: Verify generated build
         run: node pulse-timer/tests/structure.test.js
 
+      - name: Verify pure timer core
+        run: node pulse-timer/tests/timer-core.test.js
+
       - name: Verify timer audio pipeline
         run: node pulse-timer/test-audio.js
 
