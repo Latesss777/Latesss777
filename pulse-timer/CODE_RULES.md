@@ -11,9 +11,10 @@ These rules are mandatory for every change in `pulse-timer/`.
 ## Module boundaries
 1. Audio code lives only in `src/audio/`.
 2. Visual tokens and materials live only in `src/styles/`.
-3. Timer state/phase logic lives only in `src/app/`.
-4. Persistence and sharing must not know about UI styling.
-5. UI code calls public module APIs; it must not reach into module internals.
+3. Pure phase/duration math lives only in `src/core/`; it must never touch DOM, storage, audio, or CSS.
+4. Screen orchestration and interaction state live in `src/app/`.
+5. Persistence and sharing must not know about UI styling.
+6. UI code calls public module APIs; it must not reach into module internals.
 
 ## JavaScript
 1. No new global variables except a single explicit module namespace when required by the generated bundle.
