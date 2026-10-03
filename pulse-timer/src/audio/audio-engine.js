@@ -37,6 +37,7 @@
     let lastCue = '';
     let lastCueAt = 0;
     let cueCount = 0;
+    let activeSourceCount = 0;
     let sessionTransitionCount = 0;
     let cueChain = Promise.resolve();
     const buffers = new Map();
@@ -276,10 +277,12 @@
           }
 
           source.addEventListener('ended', () => {
+            activeSourceCount = Math.max(0, activeSourceCount - 1);
             cueCount += 1;
             releaseAudibleCueSession().finally(() => resolve(true));
           }, { once: true });
 
+          activeSourceCount += 1;
           source.start();
         } catch (error) {
           recordError(error, 'play buffer');
@@ -367,7 +370,7 @@
       carrier = null;
       carrierGain = null;
       configureMixingSession();
-      if (context?.state === 'running') {
+      if (context?.state === 'running' && activeSourceCount === 0) {
         context.suspend().catch(()=>{});
       }
     }
@@ -416,6 +419,7 @@
           lastCue,
           lastCueAt,
           cueCount,
+          activeSourceCount,
           sessionTransitionCount,
           lastError
         };
