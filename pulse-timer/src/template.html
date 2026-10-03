@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta id="themeColor" name="theme-color" content="#050505">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>Pulse Timer</title>
+<!-- pulse-timer-clean-rebuild-v1 -->
+<!-- PULSE_STYLES -->
+</head>
+<body>
+<div id="app"><input id="hapticSwitch" type="checkbox" switch aria-hidden="true" tabindex="-1">
+
+  <div class="splash" id="splash">
+    <div class="splash-ring"></div>
+    <div class="splash-logo">
+      <svg viewBox="0 0 220 220" aria-label="Pulse Timer">
+        <circle cx="110" cy="110" r="78" fill="none" stroke="white" stroke-width="8" opacity=".92"/>
+        <path d="M35 112h42l14-24 20 64 19-82 17 42h38" fill="none" stroke="white" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="168" cy="47" r="7" fill="white"/>
+      </svg>
+      <div class="splash-brand">PULSE TIMER</div>
+    </div>
+  </div>
+
+  <main class="screen" id="screen">
+    <div class="topbar">
+      <div><div class="eyebrow">PULSE TIMER</div><h1>ТРЕНИРОВКИ</h1></div>
+      <button class="icon-btn" id="settingsBtn" aria-label="Настройки">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M9.7 2.6h4.6l.7 2.2 2 .8 2.1-1.1 3.2 3.2-1.1 2.1.8 2 .2.7-.2 1.3-.8 2 1.1 2.1-3.2 3.2-2.1-1.1-2 .8-.7 2.2H9.7L9 19.8l-2-.8-2.1 1.1-3.2-3.2 1.1-2.1-.8-2-.2-.7.2-1.3.8-2-1.1-2.1 3.2-3.2L7 6.6l2-.8.7-2.2Z"/><circle cx="12" cy="12" r="3.1"/></svg>
+      </button>
+    </div>
+
+    <div class="settings hidden" id="settings">
+      <div class="settings-row">
+        <span>Звук</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <button id="testSoundBtn" style="height:34px;padding:0 11px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:#181818;color:#fff;font-size:11px">Тест</button>
+          <label class="switch"><input type="checkbox" id="soundToggle" checked><span class="switch-track"></span></label>
+        </div>
+      </div>
+      <div class="settings-row">
+        <span>Вибрация</span>
+        <label class="switch"><input type="checkbox" id="vibrateToggle" checked><span class="switch-track"></span></label>
+      </div>
+      <div class="voice-block">
+        <div class="voice-block-title">Финальные голоса</div>
+        <div class="voice-manage">
+          <button class="voice-add" id="addVoiceBtn">＋ Добавить аудио</button>
+          <span class="voice-count" id="voiceCount">0 / 10</span>
+        </div>
+        <div class="voice-library" id="voiceLibrary"></div>
+        <div class="voice-help">Можно загрузить реальный аудиофрагмент и назначить его конкретной тренировке.</div>
+        <input id="voiceFileInput" type="file" accept="audio/*" hidden>
+      </div>
+    </div>
+
+    <section class="cards" id="cards"></section>
+
+    <button class="fab" id="addBtn" aria-label="Добавить тренировку">
+      <svg class="icon" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+  </main>
+
+  <section class="editor hidden" id="editor">
+    <div class="editor-head">
+      <button class="icon-btn" id="editorBack" aria-label="Назад">‹</button>
+      <h2>ТРЕНИРОВКА</h2>
+      <button class="text-btn" id="saveBtn">ГОТОВО</button>
+    </div>
+
+    <input class="name-input" id="nameInput" maxlength="32" autocomplete="off" spellcheck="false">
+    <div class="color-block">
+      <div class="color-block-title">Цвет карточки</div>
+      <div class="color-picker" id="colorPicker"></div>
+    </div>
+    <div class="voice-block">
+      <div class="voice-block-title">Финальный голос</div>
+      <div class="voice-picker" id="voicePicker"></div>
+    </div>
+    <div class="editor-list" id="editorList"></div>
+    <button class="start-btn" id="editorStart">СТАРТ</button>
+    <button class="delete-btn" id="deleteBtn">Удалить тренировку</button>
+  </section>
+
+  <section class="timer hidden" id="timer">
+    <div class="phase-bg prep" id="phaseBg"></div>
+    <div class="timer-shell">
+      <div class="timer-head">
+        <button class="icon-btn" id="exitBtn" aria-label="Назад">
+          <svg class="icon timer-icon" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg>
+        </button>
+        <div class="progress"><i id="progressBar"></i></div>
+        <button class="icon-btn" id="pauseBtn" aria-label="Пауза">
+          <svg class="icon timer-icon" viewBox="0 0 24 24"><path d="M9 6v12M15 6v12"/></svg>
+        </button>
+      </div>
+
+      <div class="timer-hero">
+        <div class="timer-sub" id="timerSub"></div>
+        <div class="phase-title" id="phaseTitle">ПОДГОТОВКА</div>
+        <div class="timer-number" id="timerNumber">10</div>
+        <div class="timer-total" id="timerTotal">/ 10 сек</div>
+      </div>
+
+      <div class="stats">
+        <div><span>Осталось</span><b id="remainTotal">0:00</b></div>
+        <div><span>Всего</span><b id="allTotal">0:00</b></div>
+      </div>
+
+      <div class="intervals" id="intervals"></div>
+
+      <div class="footer-nav">
+        <button id="prevBtn" aria-label="Предыдущий интервал">
+          <svg class="icon footer-arrow" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg>
+        </button>
+        <div><small>ИНТЕРВАЛ</small><b id="intervalCounter">1/1</b></div>
+        <button id="nextBtn" aria-label="Следующий интервал">
+          <svg class="icon footer-arrow" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal hidden" id="cardMenuModal">
+    <div class="modal-card">
+      <div class="eyebrow">ТРЕНИРОВКА</div>
+      <h3 id="cardMenuTitle">Действия</h3>
+      <div class="modal-actions" style="grid-template-columns:1fr">
+        <button id="cardMenuEdit">Редактировать</button>
+        <button id="cardMenuShare">Поделиться</button>
+        <button id="cardMenuCancel">Отмена</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="share-overlay hidden" id="shareOverlay">
+    <div class="share-sheet">
+      <div class="share-head">
+        <button class="icon-btn" id="shareBack" aria-label="Закрыть"><svg class="icon" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button>
+        <div class="eyebrow">PULSE TIMER</div>
+        <div style="width:48px"></div>
+      </div>
+      <div class="share-head-copy"><div class="eyebrow">ПОДЕЛИТЬСЯ</div><h2>ТРЕНИРОВКОЙ</h2></div>
+      <div class="share-preview" id="sharePreview"></div>
+      <div class="qr-panel">
+        <h3>СКАНИРУЙ QR-КОД</h3>
+        <div class="qr-sub">Открой тренировку по ссылке</div>
+        <div class="qr-frame"><img id="shareQr" alt="QR-код тренировки"></div>
+        <div class="share-url">
+          <span id="shareUrlText"></span>
+          <button id="copyShareInline" aria-label="Копировать ссылку"><svg class="icon" viewBox="0 0 24 24"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg></button>
+        </div>
+        <div class="share-actions">
+          <button class="share-action" id="copyShareBtn"><svg class="icon" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1"/><path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"/></svg><span>Копировать</span></button>
+          <button class="share-action" id="nativeShareBtn"><svg class="icon" viewBox="0 0 24 24"><path d="M12 16V3M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg><span>Поделиться</span></button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+
+  <div class="modal hidden" id="exitModal">
+    <div class="modal-card">
+      <div class="eyebrow">ТРЕНИРОВКА ИДЁТ</div>
+      <h3>Выйти из тренировки?</h3>
+      <p>Текущий прогресс будет сброшен.</p>
+      <div class="modal-actions">
+        <button id="continueBtn">Продолжить</button>
+        <button id="confirmExitBtn" class="light">Выйти</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="numpad hidden" id="numpad">
+    <div class="numpad-card">
+      <div class="numpad-value" id="numpadValue">0</div>
+      <div class="keys" id="keys"></div>
+    </div>
+  </div>
+</div>
+
+<!-- PULSE_SCRIPTS -->
+</body>
+</html>
