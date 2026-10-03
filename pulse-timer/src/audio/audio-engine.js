@@ -36,6 +36,9 @@
     let lastError = '';
     let lastCue = '';
     let lastCueAt = 0;
+    let cueCount = 0;
+    let sessionTransitionCount = 0;
+    let cueChain = Promise.resolve();
     const buffers = new Map();
     const voiceCache = new WeakMap();
 
@@ -49,6 +52,7 @@
       if (!('audioSession' in navigator)) return;
       try {
         navigator.audioSession.type = 'ambient';
+        sessionTransitionCount += 1;
       } catch (error) {
         recordError(error, 'audioSession idle');
       }
@@ -65,16 +69,30 @@
           await new Promise(resolve => setTimeout(resolve, 0));
         }
         navigator.audioSession.type = 'playback';
+        sessionTransitionCount += 1;
       } catch (error) {
         recordError(error, 'audioSession cue');
       }
     }
 
-    function releaseAudibleCueSession() {
+    async function releaseAudibleCueSession() {
+      try {
+        if (context?.state === 'running') {
+          await Promise.race([
+            context.suspend(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('suspend timeout')), RESUME_TIMEOUT_MS))
+          ]);
+        }
+      } catch (error) {
+        recordError(error, 'suspend after cue');
+      }
+
       if (!('audioSession' in navigator)) return;
       try {
-        // Return ownership immediately so Music/Spotify can resume after the cue.
+        // Change category only after WebAudio has stopped rendering. This avoids
+        // the iOS state where AudioContext says "running" but later cues are silent.
         navigator.audioSession.type = 'ambient';
+        sessionTransitionCount += 1;
       } catch (error) {
         recordError(error, 'audioSession release');
       }
@@ -97,7 +115,6 @@
     }
 
     function ensureContext() {
-      configureMixingSession();
       if (!context || context.state === 'closed') {
         const AudioContextCtor = window.AudioContext || window.webkitAudioContext;
         if (!AudioContextCtor) {
@@ -210,6 +227,7 @@
 
     async function unlock() {
       if (!isEnabled()) return false;
+      configureMixingSession();
       const running = await resumeContext();
       if (!running) return false;
       await decodeCues();
@@ -227,23 +245,43 @@
 
     async function playBuffer(buffer, volume = 1) {
       if (!isEnabled() || !buffer) return false;
-      if (!(await resumeContext())) return false;
-      await activateAudibleCueSession();
+
+      // A cue owns the audio session from category activation until the source
+      // ends. Between cues the context stays suspended.
       try {
-        const source = context.createBufferSource();
-        source.buffer = buffer;
-        if (!connectSource(source, volume)) {
-          releaseAudibleCueSession();
-          return false;
+        if (context?.state === 'running') {
+          await context.suspend();
         }
-        source.addEventListener('ended', releaseAudibleCueSession, { once: true });
-        source.start();
-        return true;
       } catch (error) {
-        releaseAudibleCueSession();
-        recordError(error, 'play buffer');
+        recordError(error, 'pre-cue suspend');
+      }
+
+      await activateAudibleCueSession();
+      if (!(await resumeContext())) {
+        await releaseAudibleCueSession();
         return false;
       }
+
+      return new Promise(resolve => {
+        try {
+          const source = context.createBufferSource();
+          source.buffer = buffer;
+          if (!connectSource(source, volume)) {
+            releaseAudibleCueSession().finally(() => resolve(false));
+            return;
+          }
+
+          source.addEventListener('ended', () => {
+            cueCount += 1;
+            releaseAudibleCueSession().finally(() => resolve(true));
+          }, { once: true });
+
+          source.start();
+        } catch (error) {
+          recordError(error, 'play buffer');
+          releaseAudibleCueSession().finally(() => resolve(false));
+        }
+      });
     }
 
     async function playSignal(kind) {
@@ -260,7 +298,10 @@
 
       lastCue = cue;
       lastCueAt = Date.now();
-      return playBuffer(buffers.get(cue), CUE_GAIN[cue] || 1);
+
+      const run = () => playBuffer(buffers.get(cue), CUE_GAIN[cue] || 1);
+      cueChain = cueChain.then(run, run);
+      return cueChain;
     }
 
     async function playBlob(blob, volume = 0.92) {
@@ -280,38 +321,18 @@
     }
 
     async function startCarrier() {
-      if (!isEnabled()) return false;
-      if (!(await unlock())) return false;
-      if (carrier) return true;
-
-      try {
-        carrier = context.createOscillator();
-        carrierGain = context.createGain();
-        carrier.frequency.value = CARRIER_FREQUENCY_HZ;
-        carrierGain.gain.value = CARRIER_GAIN;
-        carrier.connect(carrierGain);
-        carrierGain.connect(master);
-        carrier.start();
-        return true;
-      } catch (error) {
-        carrier = null;
-        carrierGain = null;
-        recordError(error, 'carrier');
-        return false;
-      }
+      // Deliberately disabled. A continuous carrier keeps the WebAudio session
+      // active and prevents Music/Spotify from recovering between timer cues.
+      return true;
     }
 
-    function stopCarrier() {
-      try { carrier?.stop(); } catch {}
-      try { carrier?.disconnect(); } catch {}
-      try { carrierGain?.disconnect(); } catch {}
-      carrier = null;
-      carrierGain = null;
-    }
+    function stopCarrier() {}
 
     async function onVisibilityChange(hidden) {
       if (hidden) return;
+      configureMixingSession();
       await resumeContext();
+      try { if (context?.state === 'running') await context.suspend(); } catch {}
     }
 
     function bindGestureUnlock(target = document) {
@@ -348,6 +369,8 @@
           embedded: Object.fromEntries(Object.entries(CUE_DATA).map(([name, value]) => [name, value.length])),
           lastCue,
           lastCueAt,
+          cueCount,
+          sessionTransitionCount,
           lastError
         };
       },
