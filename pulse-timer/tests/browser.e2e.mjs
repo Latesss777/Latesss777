@@ -69,14 +69,16 @@ const glassStyle=await page.locator('#settingsBtn').evaluate(el=>{
 assert(glassStyle&&glassStyle!=='none','Settings icon is missing backdrop-filter');
 
 await page.locator('#testSoundBtn').click();
-await page.waitForTimeout(1500);
+await page.waitForFunction(()=>((window.__pulseAudioDiagnostics?.status?.cueCount||0)>=2),null,{timeout:7000});
 const audioStatus=await page.evaluate(()=>window.__pulseAudioDiagnostics?.status);
 console.log('AUDIO_STATUS_AFTER_TEST',JSON.stringify(audioStatus));
 assert(audioStatus,'Audio diagnostics missing');
 assert(Object.keys(audioStatus.decoded||{}).length===3,'Not all timer cues decoded after user gesture: '+JSON.stringify(audioStatus));
 assert(audioStatus.lastCue==='workEnd','Sound test did not reach end cue');
 assert((audioStatus.cueCount||0)>=2,'Repeated sound test did not complete two cues: '+JSON.stringify(audioStatus));
-assert((audioStatus.sessionTransitionCount||0)>=4,'Audio session did not cycle between repeated cues: '+JSON.stringify(audioStatus));
+if(audioStatus.sessionType!=='unsupported'){
+  assert((audioStatus.sessionTransitionCount||0)>=4,'Audio session did not cycle between repeated cues: '+JSON.stringify(audioStatus));
+}
 assert(await page.locator('audio').count()===0,'HTMLAudio element exists and may take over music');
 
 await page.locator('#settingsBtn').click();
@@ -106,7 +108,11 @@ assert(pauseGlass&&pauseGlass!=='none','Timer controls are not glass');
 dims=await overflow();
 assert(dims.html<=dims.width+1&&dims.body<=dims.width+1,'Timer has horizontal overflow');
 
-await page.waitForTimeout(2700);
+await page.waitForFunction(
+  previous=>((window.__pulseAudioDiagnostics?.status?.cueCount||0)>previous),
+  audioStatus.cueCount||0,
+  {timeout:9000}
+);
 const finished=await page.evaluate(()=>window.__pulseAudioDiagnostics?.status);
 assert(finished?.lastCue==='workEnd','Final workout sound was not requested');
 assert((finished?.cueCount||0)>(audioStatus.cueCount||0),'Workout did not complete an additional timer cue: '+JSON.stringify(finished));
