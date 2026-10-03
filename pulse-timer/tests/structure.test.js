@@ -18,6 +18,7 @@ const required=[
   'src/styles/base.css',
   'src/styles/liquid-glass.css',
   'src/audio/audio-engine.js',
+  'src/core/timer-core.js',
   'src/app/app.js'
 ];
 for(const rel of required){
