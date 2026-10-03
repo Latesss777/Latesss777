@@ -39,8 +39,8 @@
     <div class="settings hidden" id="settings">
       <div class="settings-row">
         <span>Звук</span>
-        <div style="display:flex;align-items:center;gap:8px">
-          <button id="testSoundBtn" style="height:34px;padding:0 11px;border-radius:11px;border:1px solid rgba(255,255,255,.13);background:#181818;color:#fff;font-size:11px">Тест</button>
+        <div class="settings-actions">
+          <button class="glass-text-btn" id="testSoundBtn">Тест</button>
           <label class="switch"><input type="checkbox" id="soundToggle" checked><span class="switch-track"></span></label>
         </div>
       </div>
@@ -131,7 +131,7 @@
     <div class="modal-card">
       <div class="eyebrow">ТРЕНИРОВКА</div>
       <h3 id="cardMenuTitle">Действия</h3>
-      <div class="modal-actions" style="grid-template-columns:1fr">
+      <div class="modal-actions single">
         <button id="cardMenuEdit">Редактировать</button>
         <button id="cardMenuShare">Поделиться</button>
         <button id="cardMenuCancel">Отмена</button>
@@ -144,7 +144,7 @@
       <div class="share-head">
         <button class="icon-btn" id="shareBack" aria-label="Закрыть"><svg class="icon" viewBox="0 0 24 24"><path d="M15 5 8 12l7 7"/></svg></button>
         <div class="eyebrow">PULSE TIMER</div>
-        <div style="width:48px"></div>
+        <div class="share-head-spacer" aria-hidden="true"></div>
       </div>
       <div class="share-head-copy"><div class="eyebrow">ПОДЕЛИТЬСЯ</div><h2>ТРЕНИРОВКОЙ</h2></div>
       <div class="share-preview" id="sharePreview"></div>
