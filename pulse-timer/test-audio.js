@@ -13,7 +13,7 @@ const sounds = {
 
 const os = require('os');
 const path = require('path');
-const { execFileSync } = require('child_process');
+const { execFileSync, spawnSync } = require('child_process');
 
 const signalReport = {};
 for (const [name,b64] of Object.entries(sounds)) {
@@ -36,15 +36,12 @@ for (const [name,b64] of Object.entries(sounds)) {
     throw new Error(name+' has invalid duration: '+duration);
   }
 
-  let analysis = '';
-  try {
-    execFileSync('ffmpeg',[
-      '-hide_banner','-nostats','-i',tmp,
-      '-af','volumedetect','-f','null','-'
-    ],{encoding:'utf8',stdio:['ignore','pipe','pipe']});
-  } catch (err) {
-    analysis = String(err.stderr || '');
-  }
+  const ff = spawnSync('ffmpeg',[
+    '-hide_banner','-nostats','-i',tmp,
+    '-af','volumedetect','-f','null','-'
+  ],{encoding:'utf8'});
+  if (ff.error) throw ff.error;
+  const analysis = String(ff.stderr || '') + String(ff.stdout || '');
   const maxMatch = analysis.match(/max_volume:\s*(-?[0-9.]+) dB/);
   const meanMatch = analysis.match(/mean_volume:\s*(-?[0-9.]+) dB/);
   const maxDb = maxMatch ? Number(maxMatch[1]) : NaN;
