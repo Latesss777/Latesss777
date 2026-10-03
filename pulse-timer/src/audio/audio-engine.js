@@ -294,30 +294,40 @@
         null;
 
       if (!cue) return false;
-      if (!(await unlock())) return false;
 
-      lastCue = cue;
-      lastCueAt = Date.now();
+      // Serialize the ENTIRE audio-session lifecycle. A later cue must never
+      // call unlock()/ambient while the current cue is still playing.
+      const run = async () => {
+        if (!(await unlock())) return false;
+        lastCue = cue;
+        lastCueAt = Date.now();
+        return playBuffer(buffers.get(cue), CUE_GAIN[cue] || 1);
+      };
 
-      const run = () => playBuffer(buffers.get(cue), CUE_GAIN[cue] || 1);
       cueChain = cueChain.then(run, run);
       return cueChain;
     }
 
     async function playBlob(blob, volume = 0.92) {
       if (!isEnabled() || !blob) return false;
-      if (!(await unlock())) return false;
-      try {
-        let buffer = voiceCache.get(blob);
-        if (!buffer) {
-          buffer = await decodeAudioData(await blob.arrayBuffer());
-          voiceCache.set(blob, buffer);
+
+      const run = async () => {
+        if (!(await unlock())) return false;
+        try {
+          let buffer = voiceCache.get(blob);
+          if (!buffer) {
+            buffer = await decodeAudioData(await blob.arrayBuffer());
+            voiceCache.set(blob, buffer);
+          }
+          return playBuffer(buffer, volume);
+        } catch (error) {
+          recordError(error, 'voice');
+          return false;
         }
-        return playBuffer(buffer, volume);
-      } catch (error) {
-        recordError(error, 'voice');
-        return false;
-      }
+      };
+
+      cueChain = cueChain.then(run, run);
+      return cueChain;
     }
 
     async function startCarrier() {
