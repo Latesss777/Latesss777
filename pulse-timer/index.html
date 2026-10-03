@@ -129,6 +129,21 @@ h1{font-size:36px;margin:6px 0 0}
 .color-dot[data-color="green"]{--dot:linear-gradient(145deg,#4d9875,#0c281d)}
 .color-dot[data-color="violet"]{--dot:linear-gradient(145deg,#8061bb,#211532)}
 
+.voice-block{margin-top:12px;border:1px solid rgba(255,255,255,.10);border-radius:20px;background:#0d0d0d;padding:14px}
+.voice-block-title{font-size:13px;color:#a8a8a8;margin-bottom:10px}
+.voice-picker{display:flex;gap:8px;overflow:auto;padding:2px 2px 5px;scrollbar-width:none}
+.voice-picker::-webkit-scrollbar{display:none}
+.voice-chip{flex:0 0 auto;min-height:38px;max-width:190px;padding:0 13px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:#151515;color:#bdbdbd;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.voice-chip.active{background:#f1f1f1;color:#090909;border-color:#f1f1f1}
+.voice-manage{margin-top:8px;display:flex;gap:8px;align-items:center}
+.voice-add{min-height:38px;padding:0 13px;border-radius:13px;border:1px solid rgba(255,255,255,.14);background:#181818;color:#fff;font-size:12px}
+.voice-count{font-size:11px;color:#777}
+.voice-library{margin-top:8px;display:grid;gap:6px}
+.voice-library-row{display:grid;grid-template-columns:minmax(0,1fr) 36px;gap:8px;align-items:center;min-height:40px;border-top:1px solid rgba(255,255,255,.06);padding-top:6px}
+.voice-library-row span{font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.voice-remove{width:36px;height:34px;border-radius:11px;border:1px solid rgba(255,255,255,.12);background:#161616;color:#999;padding:0}
+.voice-help{margin-top:8px;font-size:10px;line-height:1.35;color:#686868}
+
 .share-overlay{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.74);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);overflow:auto;padding:calc(env(safe-area-inset-top) + 14px) 14px calc(env(safe-area-inset-bottom) + 18px)}
 .share-sheet{position:relative;min-height:100%;max-width:560px;margin:0 auto;overflow:hidden;border-radius:30px;padding:18px;border:1px solid rgba(119,255,224,.19);background:radial-gradient(circle at 16% 5%,rgba(59,220,214,.28),transparent 30%),radial-gradient(circle at 92% 56%,rgba(49,217,132,.24),transparent 35%),linear-gradient(160deg,rgba(9,27,30,.96),rgba(4,8,10,.98) 64%)}
 .share-sheet:before{content:"";position:absolute;width:240px;height:240px;border-radius:50%;left:-90px;bottom:10%;background:rgba(47,230,192,.14);filter:blur(42px);pointer-events:none}
@@ -563,6 +578,16 @@ h1{font-size:36px;margin:6px 0 0}
         <span>Вибрация</span>
         <label class="switch"><input type="checkbox" id="vibrateToggle" checked><span class="switch-track"></span></label>
       </div>
+      <div class="voice-block">
+        <div class="voice-block-title">Финальные голоса</div>
+        <div class="voice-manage">
+          <button class="voice-add" id="addVoiceBtn">＋ Добавить аудио</button>
+          <span class="voice-count" id="voiceCount">0 / 10</span>
+        </div>
+        <div class="voice-library" id="voiceLibrary"></div>
+        <div class="voice-help">Можно загрузить реальный аудиофрагмент и назначить его конкретной тренировке.</div>
+        <input id="voiceFileInput" type="file" accept="audio/*" hidden>
+      </div>
     </div>
 
     <section class="cards" id="cards"></section>
@@ -583,6 +608,10 @@ h1{font-size:36px;margin:6px 0 0}
     <div class="color-block">
       <div class="color-block-title">Цвет карточки</div>
       <div class="color-picker" id="colorPicker"></div>
+    </div>
+    <div class="voice-block">
+      <div class="voice-block-title">Финальный голос</div>
+      <div class="voice-picker" id="voicePicker"></div>
     </div>
     <div class="editor-list" id="editorList"></div>
     <button class="start-btn" id="editorStart">СТАРТ</button>
@@ -717,7 +746,8 @@ h1{font-size:36px;margin:6px 0 0}
     sets:Math.max(1,Number(w?.sets ?? 1) || 1),
     setRest:Math.max(0,Number(w?.setRest ?? 120) || 0),
     coolDown:Math.max(0,Number(w?.coolDown ?? 0) || 0),
-    color:['graphite','berry','orange','blue','green','violet'].includes(w?.color)?w.color:'graphite'
+    color:['graphite','berry','orange','blue','green','violet'].includes(w?.color)?w.color:'graphite',
+    finishVoiceId:String(w?.finishVoiceId || '')
   });
 
   function loadWorkouts(){
@@ -757,11 +787,147 @@ h1{font-size:36px;margin:6px 0 0}
   let wakeLock = null;
   let lastMediaSecond = null;
   let lastMediaKey = '';
+  let finishSequencePlayed = false;
+  let pendingFinishCue = false;
+  let voiceLibrary = [];
+  const voiceBufferCache = new Map();
+  let voiceDbPromise = null;
 
   const COLOR_OPTIONS = [
     ['graphite','Графит'],['berry','Ягодный'],['orange','Оранжевый'],
     ['blue','Синий'],['green','Зелёный'],['violet','Фиолетовый']
   ];
+
+  function openVoiceDb(){
+    if(voiceDbPromise)return voiceDbPromise;
+    voiceDbPromise=new Promise((resolve,reject)=>{
+      const req=indexedDB.open('pulse-timer-voice-library',1);
+      req.onupgradeneeded=()=>{
+        const db=req.result;
+        if(!db.objectStoreNames.contains('clips'))db.createObjectStore('clips',{keyPath:'id'});
+      };
+      req.onsuccess=()=>resolve(req.result);
+      req.onerror=()=>reject(req.error);
+    });
+    return voiceDbPromise;
+  }
+
+  async function refreshVoiceLibrary(){
+    try{
+      const db=await openVoiceDb();
+      voiceLibrary=await new Promise((resolve,reject)=>{
+        const tx=db.transaction('clips','readonly');
+        const req=tx.objectStore('clips').getAll();
+        req.onsuccess=()=>resolve((req.result||[]).sort((a,b)=>a.created-b.created));
+        req.onerror=()=>reject(req.error);
+      });
+    }catch{
+      voiceLibrary=[];
+    }
+    renderVoiceLibrary();
+    renderVoicePicker();
+  }
+
+  async function addVoiceClip(file){
+    if(!file)return;
+    await refreshVoiceLibrary();
+    if(voiceLibrary.length>=10){
+      showToast('Максимум 10 голосов');
+      return;
+    }
+    const id='voice-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,7);
+    const name=(file.name||'Финальный голос').replace(/\.[^.]+$/,'').slice(0,42);
+    try{
+      const db=await openVoiceDb();
+      await new Promise((resolve,reject)=>{
+        const tx=db.transaction('clips','readwrite');
+        tx.objectStore('clips').put({id,name,mime:file.type||'audio/mpeg',blob:file,created:Date.now()});
+        tx.oncomplete=resolve;
+        tx.onerror=()=>reject(tx.error);
+      });
+      await refreshVoiceLibrary();
+      showToast('Голос добавлен');
+    }catch{
+      showToast('Не удалось сохранить аудио');
+    }
+  }
+
+  async function removeVoiceClip(id){
+    if(!id)return;
+    try{
+      const db=await openVoiceDb();
+      await new Promise((resolve,reject)=>{
+        const tx=db.transaction('clips','readwrite');
+        tx.objectStore('clips').delete(id);
+        tx.oncomplete=resolve;
+        tx.onerror=()=>reject(tx.error);
+      });
+      voiceBufferCache.delete(id);
+      workouts=workouts.map(w=>w.finishVoiceId===id?{...w,finishVoiceId:''}:w);
+      if(editing?.finishVoiceId===id)editing.finishVoiceId='';
+      saveWorkouts();
+      await refreshVoiceLibrary();
+      renderCards();
+    }catch{}
+  }
+
+  function renderVoiceLibrary(){
+    const box=$('voiceLibrary');
+    const count=$('voiceCount');
+    if(count)count.textContent=voiceLibrary.length+' / 10';
+    if(!box)return;
+    box.innerHTML=voiceLibrary.map(v=>`
+      <div class="voice-library-row">
+        <span>${esc(v.name)}</span>
+        <button class="voice-remove" data-voice-remove="${v.id}" aria-label="Удалить">×</button>
+      </div>
+    `).join('');
+  }
+
+  function renderVoicePicker(){
+    const box=$('voicePicker');
+    if(!box||!editing)return;
+    box.innerHTML=[
+      `<button class="voice-chip ${!editing.finishVoiceId?'active':''}" data-voice-id="">Без голоса</button>`,
+      ...voiceLibrary.map(v=>`<button class="voice-chip ${editing.finishVoiceId===v.id?'active':''}" data-voice-id="${v.id}">${esc(v.name)}</button>`)
+    ].join('');
+  }
+
+  async function getVoiceAudioBuffer(id){
+    if(!id)return null;
+    if(voiceBufferCache.has(id))return voiceBufferCache.get(id);
+    try{
+      const db=await openVoiceDb();
+      const record=await new Promise((resolve,reject)=>{
+        const tx=db.transaction('clips','readonly');
+        const req=tx.objectStore('clips').get(id);
+        req.onsuccess=()=>resolve(req.result||null);
+        req.onerror=()=>reject(req.error);
+      });
+      if(!record?.blob)return null;
+      ensureAudio();
+      const buffer=await decodeTimerAudio(await record.blob.arrayBuffer());
+      voiceBufferCache.set(id,buffer);
+      return buffer;
+    }catch{return null}
+  }
+
+  async function playFinishVoice(id){
+    if(!sound||!id)return false;
+    const buffer=await getVoiceAudioBuffer(id);
+    if(!buffer||!audioCtx)return false;
+    try{
+      if(audioCtx.state==='suspended')await audioCtx.resume();
+      const src=audioCtx.createBufferSource();
+      const gain=audioCtx.createGain();
+      src.buffer=buffer;
+      gain.gain.value=.95;
+      src.connect(gain);
+      gain.connect(audioCtx.destination);
+      src.start();
+      return true;
+    }catch{return false}
+  }
 
   const fieldMeta = [
     ['prep','Подготовка','сек',0,5],
@@ -881,14 +1047,14 @@ h1{font-size:36px;margin:6px 0 0}
   }
 
   function playRecorded(name,volume=1){
-    if(!sound)return;
+    if(!sound)return false;
     configureTimerAudioSession();
     ensureAudio();
     const buffer=recordedSounds[name];
     if(!buffer){
       loadRecordedSounds();
       fallbackTimerTone(name,.20);
-      return;
+      return !!audioCtx;
     }
     try{
       const src=audioCtx.createBufferSource();
@@ -898,8 +1064,10 @@ h1{font-size:36px;margin:6px 0 0}
       src.connect(gain);
       gain.connect(audioCtx.destination);
       src.start();
+      return true;
     }catch{
       fallbackTimerTone(name,.20);
+      return !!audioCtx;
     }
   }
 
@@ -917,17 +1085,15 @@ h1{font-size:36px;margin:6px 0 0}
       try{await audioCtx.resume()}catch{}
     }
     if(kind==='preStart'){
-      playRecorded('countdown',1);
-      return;
+      return playRecorded('countdown',1)!==false;
     }
     if(kind==='workStart'){
-      playRecorded('workStart',1);
-      return;
+      return playRecorded('workStart',1)!==false;
     }
     if(kind==='workEnd'||kind==='finish'){
-      playRecorded('workEnd',1);
-      return;
+      return playRecorded('workEnd',1)!==false;
     }
+    return false;
   }
 
   function makeBackgroundKeeperWav(){
@@ -1137,7 +1303,7 @@ h1{font-size:36px;margin:6px 0 0}
 
   function openEditor(id){
     const existing=id?workouts.find(w=>w.id===id):null;
-    editing=existing?{...existing}:{id:uid(),name:'НОВАЯ ТРЕНИРОВКА',prep:10,work:30,rest:60,cycles:8,sets:1,setRest:120,coolDown:0,color:'graphite'};
+    editing=existing?{...existing}:{id:uid(),name:'НОВАЯ ТРЕНИРОВКА',prep:10,work:30,rest:60,cycles:8,sets:1,setRest:120,coolDown:0,color:'graphite',finishVoiceId:''};
     $('nameInput').value=editing.name;
     $('deleteBtn').classList.toggle('hidden',!existing);
     renderEditor();
@@ -1158,6 +1324,7 @@ h1{font-size:36px;margin:6px 0 0}
     $('colorPicker').innerHTML=COLOR_OPTIONS.map(([key,label])=>`
       <button class="color-dot ${editing.color===key?'active':''}" data-color="${key}" aria-label="${label}" title="${label}"></button>
     `).join('');
+    renderVoicePicker();
   }
 
   function showToast(message){
@@ -1187,7 +1354,7 @@ h1{font-size:36px;margin:6px 0 0}
     const n=normalize(w);
     return base64UrlEncode(JSON.stringify({
       v:1,name:n.name,prep:n.prep,work:n.work,rest:n.rest,cycles:n.cycles,
-      sets:n.sets,setRest:n.setRest,coolDown:n.coolDown,color:n.color
+      sets:n.sets,setRest:n.setRest,coolDown:n.coolDown,color:n.color,finishVoiceId:n.finishVoiceId
     }));
   }
 
@@ -1198,7 +1365,7 @@ h1{font-size:36px;margin:6px 0 0}
   }
 
   function workoutSignature(w){
-    return [w.name,w.prep,w.work,w.rest,w.cycles,w.sets,w.setRest,w.coolDown,w.color].join('|');
+    return [w.name,w.prep,w.work,w.rest,w.cycles,w.sets,w.setRest,w.coolDown,w.color,w.finishVoiceId].join('|');
   }
 
   function workoutShareUrl(w){
@@ -1297,6 +1464,21 @@ h1{font-size:36px;margin:6px 0 0}
   const keys=['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
   $('keys').innerHTML=keys.map(k=>`<button data-key="${k}">${k}</button>`).join('');
 
+  async function playFinishSequence(){
+    if(finishSequencePlayed)return;
+    pendingFinishCue=false;
+    await unlockSignals();
+    const bellPlayed=await playSignal('finish');
+    if(!bellPlayed && document.hidden){
+      pendingFinishCue=true;
+      return;
+    }
+    finishSequencePlayed=true;
+    haptic('finish');
+    const voiceId=active?.finishVoiceId||'';
+    if(voiceId)setTimeout(()=>playFinishVoice(voiceId),700);
+  }
+
   async function startWorkout(w){
     await unlockSignals();
     active=normalize(w);
@@ -1307,6 +1489,8 @@ h1{font-size:36px;margin:6px 0 0}
     deadline=Date.now()+remainingMs;
     running=true;
     lastCountdownSec=null;
+    finishSequencePlayed=false;
+    pendingFinishCue=false;
     show('timer');
     renderTimer(true);
     updatePauseIcon();
@@ -1357,10 +1541,7 @@ h1{font-size:36px;margin:6px 0 0}
         updatePauseIcon();
         stopBackgroundKeeper();
         releaseWakeLock();
-        if(over<1500){
-          playSignal('finish');
-          haptic('finish');
-        }
+        playFinishSequence();
         return;
       }
 
@@ -1401,10 +1582,7 @@ h1{font-size:36px;margin:6px 0 0}
       updatePauseIcon();
       stopBackgroundKeeper();
       releaseWakeLock();
-      if(auto){
-        playSignal('finish');
-        haptic('finish');
-      }
+      if(auto)playFinishSequence();
       return;
     }
 
@@ -1596,7 +1774,28 @@ h1{font-size:36px;margin:6px 0 0}
   $('cardMenuModal').addEventListener('click',e=>{if(e.target===$('cardMenuModal'))closeCardMenu()});
 
   $('addBtn').addEventListener('click',()=>{openEditor(null);haptic(10)});
-  $('settingsBtn').addEventListener('click',()=>$('settings').classList.toggle('hidden'));
+  $('settingsBtn').addEventListener('click',()=>{
+    $('settings').classList.toggle('hidden');
+    refreshVoiceLibrary();
+  });
+
+  $('addVoiceBtn').addEventListener('click',()=>$('voiceFileInput').click());
+  $('voiceFileInput').addEventListener('change',async e=>{
+    const file=e.target.files?.[0];
+    e.target.value='';
+    if(file)await addVoiceClip(file);
+  });
+  $('voiceLibrary').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-voice-remove]');
+    if(btn)removeVoiceClip(btn.dataset.voiceRemove);
+  });
+  $('voicePicker').addEventListener('click',e=>{
+    const btn=e.target.closest('[data-voice-id]');
+    if(!btn||!editing)return;
+    editing.finishVoiceId=btn.dataset.voiceId||'';
+    renderVoicePicker();
+    haptic(8);
+  });
 
   $('colorPicker').addEventListener('click',e=>{
     const btn=e.target.closest('.color-dot');
@@ -1735,6 +1934,7 @@ h1{font-size:36px;margin:6px 0 0}
   window.visualViewport?.addEventListener('resize',syncViewportHeight);
 
   document.addEventListener('visibilitychange',()=>{
+    if(!document.hidden && pendingFinishCue && active)playFinishSequence();
     if(!document.hidden && active){
       if(running){
         remainingMs=deadline-Date.now();
@@ -1755,6 +1955,7 @@ h1{font-size:36px;margin:6px 0 0}
 
   configureTimerAudioSession();
   loadRecordedSounds();
+  refreshVoiceLibrary();
   importSharedWorkout();
   renderCards();
 
