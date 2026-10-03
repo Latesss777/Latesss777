@@ -107,6 +107,7 @@ assert(dims.html<=dims.width+1&&dims.body<=dims.width+1,'Timer has horizontal ov
 await page.waitForTimeout(2700);
 const finished=await page.evaluate(()=>window.__pulseAudioDiagnostics?.status);
 assert(finished?.lastCue==='workEnd','Final workout sound was not requested');
+assert(!finished?.lastError,'Audio engine ended with an error: '+String(finished?.lastError||''));
 
 fs.mkdirSync(path.join(root,'test-artifacts'),{recursive:true});
 await page.screenshot({path:path.join(root,'test-artifacts','timer-iphone.png'),fullPage:true});
