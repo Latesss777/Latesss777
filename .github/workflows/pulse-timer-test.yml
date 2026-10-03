@@ -1,0 +1,23 @@
+name: Pulse Timer Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'pulse-timer/**'
+      - '.github/workflows/pulse-timer-test.yml'
+  pull_request:
+    paths:
+      - 'pulse-timer/**'
+
+jobs:
+  audio-static-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify timer audio pipeline
+        run: node pulse-timer/test-audio.js
