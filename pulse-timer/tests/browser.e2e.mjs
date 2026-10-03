@@ -96,6 +96,10 @@ await page.locator('#editorBack').click();
 await page.locator('.card-primary.play-btn').click();
 await page.locator('#timer').waitFor({state:'visible'});
 assert(await page.locator('.int-row').count()===2,'Short workout phases are incorrect');
+await page.waitForTimeout(250);
+const backgroundAudio=await page.evaluate(()=>window.__pulseAudioDiagnostics?.status);
+assert(backgroundAudio?.carrierActive===true,'Background workout carrier did not start');
+assert(backgroundAudio?.contextState==='running','AudioContext is not running during workout');
 
 const pauseBox=await page.locator('#pauseBtn').boundingBox();
 assert(pauseBox&&pauseBox.width>=44&&pauseBox.height>=44,'Pause target is below 44px');
